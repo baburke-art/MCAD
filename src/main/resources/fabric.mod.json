@@ -18,6 +18,9 @@
 		"main": [
 			"baburke.mcad.net.MCAD"
 		],
+		"client": [
+			"baburke.mcad.net.MCADClient"
+		],
 		"fabric-datagen": [
 			"baburke.mcad.net.MCADDataGenerator"
 		]

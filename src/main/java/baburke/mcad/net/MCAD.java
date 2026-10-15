@@ -1,11 +1,16 @@
 package baburke.mcad.net;
 
+import baburke.mcad.net.block.ModBlocks;
+import baburke.mcad.net.item.ModItems;
 import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.resources.Identifier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+//keybind j for mod menu
+
 
 public class MCAD implements ModInitializer {
 	public static final String MOD_ID = "mcad";
@@ -21,12 +26,14 @@ public class MCAD implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
 
-		LOGGER.info("Hello Fabric world!");
+		//LOGGER.info("Hello Fabric world!");
 
-
+		ModItems.registerModItems();
+		ModBlocks.registerModBlocks();
 	}
 
 	public static Identifier id(String path) {
 		return Identifier.fromNamespaceAndPath(MOD_ID, path);
 	}
+
 }
