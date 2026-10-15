@@ -18,7 +18,13 @@ import java.util.function.Function;
 
 public class ModBlocks {
 
-    public static final Block ORIGIN_BLOCK =  registerBlock("origin_block", properties -> new Block(properties.strength(0f).sound(SoundType.TRIAL_SPAWNER)));
+    public static final Block ORIGIN_BLOCK =  registerBlock(
+            "origin_block",
+            properties -> new Block(
+                    properties
+                            .strength(0.6F)
+                            .sound(SoundType.TRIAL_SPAWNER)
+                            .lightLevel(state -> 15)));
 
 
 

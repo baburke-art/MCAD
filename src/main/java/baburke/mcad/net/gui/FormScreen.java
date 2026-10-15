@@ -244,15 +244,6 @@ public class FormScreen extends Screen {
         }
     }
 
-
-
-
-
-
-
-
-
-
     // Execute inputs
     private void submitForm() {
         String name = nameInput.getValue().trim();
