@@ -28,6 +28,7 @@ public final class BlockNetworking {
 
                     // Only allow changes within 48 blocks
                     if (player.blockPosition().distSqr(pos) > 2304) {
+                        System.out.println("Player too far to execute!");
                         return;
                     }
 

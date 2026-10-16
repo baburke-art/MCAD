@@ -34,7 +34,5 @@ public record UpdateBlock(BlockPos pos, BlockState state)
         return new UpdateBlock(pos, Blocks.AIR.defaultBlockState());
     }
 
-    public static UpdateBlock place(BlockPos pos, BlockState state) {
-        return new UpdateBlock(pos, state);
-    }
+    public static UpdateBlock place(BlockPos pos, BlockState state) {return new UpdateBlock(pos, state);}
 }

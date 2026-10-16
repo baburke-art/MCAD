@@ -13,6 +13,7 @@ import net.minecraft.resources.Identifier;
 
 public class MCADClient implements ClientModInitializer {
 
+    // Defines Keybind category
     private static final KeyMapping.Category CATEGORY =
             KeyMapping.Category.register(
                     Identifier.fromNamespaceAndPath(
@@ -20,6 +21,7 @@ public class MCADClient implements ClientModInitializer {
                     )
             );
 
+    // Adds MCAD Editor keybind (Default "J")
     private static final KeyMapping OPEN_FORM =
             KeyMappingHelper.registerKeyMapping(
                     new KeyMapping(

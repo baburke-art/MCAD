@@ -1,5 +1,6 @@
 package baburke.mcad.net.gui;
 
+import baburke.mcad.net.feature.Execute;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -236,8 +237,8 @@ public class MCADEditor extends Screen {
         try {
             length = Integer.parseInt(lengthInput.getValue());
         } catch (NumberFormatException e) {
-            System.out.println("Wrong length input!");
-            return; // Ignore invalid input
+            System.out.println("Invalid length input");
+            return;
         }
 
         if (length < 0) {
@@ -246,12 +247,13 @@ public class MCADEditor extends Screen {
             return;
         } else {
             // Positive
+            new Execute().extrude();
+            System.out.println("New execute");
         }
-
-        System.out.println("length: " + length);
 
         System.out.println("Name: " + name);
         System.out.println("Mode: " + selectedMode);
+        System.out.println("length: " + length);
         System.out.println("Reversed: " + reversed);
         System.out.println("Blocks: ");
 

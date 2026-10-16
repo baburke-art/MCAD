@@ -5,19 +5,15 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.client.Minecraft;
 
 public class Execute {
 
-    // Plane plane = new Plane();
+    Minecraft client = Minecraft.getInstance();
 
-    // if (!plane == null)
-
-    BlockPos pos = new BlockPos(10, -60, 0);
+    BlockPos pos = new BlockPos(10, -59, 0);
     //BlockState state = client.level.getBlockState(pos);
     BlockState state = Blocks.STONE.defaultBlockState();
-
-    // This is only client side
-    //client.level.destroyBlock(pos, true, client.player);
 
     // Destroy (cut)
 //                ClientPlayNetworking.send(
@@ -25,12 +21,19 @@ public class Execute {
 //                );
 
     public void extrude() {
+
+        // if (client.level.getBlockState(pos) == Blocks.STONE.defaultBlockState()) {return;}
+
         for (int i = 0; i < 10; i++) {
-            pos = new BlockPos(pos.getX(), i, pos.getZ());
+            pos = new BlockPos(pos.getX(), -59, i);
             ClientPlayNetworking.send(
-                    new UpdateBlock(pos, Blocks.STONE.defaultBlockState())
+                    new UpdateBlock(pos, state)
             );
         }
+
+        // use a Map<BlockPos, BlockState> to build the structure, then convert it into a bounded List<BlockEntry> for each network batch.
+        // This keeps storage convenient and network transfers manageable.
+
 
     }
 
