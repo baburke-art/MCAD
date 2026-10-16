@@ -1,12 +1,9 @@
 package baburke.mcad.net;
 
 import baburke.mcad.net.block.ModBlocks;
-import baburke.mcad.net.feature.DestroyBlockPayload;
 import baburke.mcad.net.item.ModItems;
+import baburke.mcad.net.network.BlockNetworking;
 import net.fabricmc.api.ModInitializer;
-
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.Identifier;
 
 import org.slf4j.Logger;
@@ -32,35 +29,9 @@ public class MCAD implements ModInitializer {
 
 		ModItems.registerModItems();
 		ModBlocks.registerModBlocks();
+		BlockNetworking.register();
 
-		PayloadTypeRegistry.serverboundPlay().register(
-				DestroyBlockPayload.TYPE,
-				DestroyBlockPayload.CODEC
-		);
 
-		ServerPlayNetworking.registerGlobalReceiver(
-				DestroyBlockPayload.TYPE,
-				(payload, context) -> {
-					var player = context.player();
-					var level = player.level();
-					var pos = payload.pos();
-
-					// Basic validation
-					if (player.blockPosition().distSqr(pos) > 36) {
-						return;
-					}
-
-					if (!level.isLoaded(pos)) {
-						return;
-					}
-
-					if (level.getBlockState(pos).isAir()) {
-						return;
-					}
-
-					level.destroyBlock(pos, true, player);
-				}
-		);
 	}
 
 	public static Identifier id(String path) {

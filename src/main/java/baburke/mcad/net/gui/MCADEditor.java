@@ -11,27 +11,42 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import javax.swing.*;
 import java.util.List;
 
-public class FormScreen extends Screen {
+public class MCADEditor extends Screen {
 
     private static final int PANEL_WIDTH = 100;
     private static final int PANEL_HEIGHT = 180;
 
     private static final int PAD = 8;
 
-    private int contentX;
-    private int contentY;
-    private int contentWidth;
-    private int cursorY;
+    // X position of editor
+    private static final int contentX = PAD;
+    // Y position of editor
+    private static final int contentY = PAD*2;
+    private static final int contentWidth = PANEL_WIDTH - PAD;
+    private static final int footerY = PANEL_HEIGHT - PAD;
+    private static final int scrollHeight = footerY - contentY;
 
+    // Layer name
     private EditBox nameInput;
-    private Button dropdownButton;
-    private Button[] optionButtons;
-
     private String nameValue = "";
+
+    // Mode
+    //private Button dropdownButton;
+    //private Button[] optionButtons;
+
+    // Default mode
     private String selectedMode = "Extrude";
     private boolean dropdownOpen = false;
+
+    // Length input
+    private EditBox lengthInput;
+    private String lengthValue = "0";
+
+    // Reverse length
+    private boolean reversed = false;
 
     private static final List<String> MODES =
             List.of("Extrude", "Cut");
@@ -41,168 +56,8 @@ public class FormScreen extends Screen {
                 + (dropdownOpen ? "  ▲" : "  ▼"));
     }
 
-    public FormScreen() {
+    public MCADEditor() {
         super(Component.literal("MCAD Editor"));
-    }
-
-    @Override
-    protected void init() {
-        // X position of editor
-        final int contentX = PAD;
-        // Y position of editor
-        final int contentY = PAD*2;
-
-        final int contentWidth = PANEL_WIDTH - PAD;
-
-        final int footerY = PANEL_HEIGHT - PAD;
-
-        final int scrollHeight = footerY - contentY;
-
-        // Panel background.
-        addRenderableWidget(new PanelBackground(
-                PAD, PAD, PANEL_WIDTH + PAD, PANEL_HEIGHT + PAD
-        ));
-
-        // Build the vertically stacked form.
-        LinearLayout form = LinearLayout.vertical()
-                .spacing(6);
-
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal("Layer Name:"), font
-        ));
-
-        nameInput = new EditBox(
-                font, 0, 0,
-                contentWidth, 20,
-                Component.literal("Name")
-        );
-        nameInput.setMaxLength(32);
-        nameInput.setValue(nameValue);
-        nameInput.setHint(Component.literal("Layer name..."));
-        form.addChild(nameInput);
-
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal("Mode:"), font
-        ));
-
-        dropdownButton = Button.builder(
-                dropdownLabel(),
-                button -> {
-                    nameValue = nameInput.getValue();
-                    dropdownOpen = !dropdownOpen;
-                    rebuildWidgets();
-                }
-        ).bounds(0, 0, contentWidth, 20).build();
-
-        form.addChild(dropdownButton);
-
-        // Only add options while the dropdown is expanded.
-        if (dropdownOpen) {
-            for (String mode : MODES) {
-                Button option = Button.builder(
-                        Component.literal(
-                                (mode.equals(selectedMode) ? "✓ " : "") + mode
-                        ),
-                        button -> {
-                            nameValue = nameInput.getValue();
-                            selectedMode = mode;
-                            dropdownOpen = false;
-                            rebuildWidgets();
-                        }
-                ).bounds(0, 0, contentWidth, 20).build();
-
-                form.addChild(option);
-            }
-        }
-
-        // Example extra fields to demonstrate scrolling.
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal("Length:"), font
-        ));
-
-        EditBox distanceInput = new EditBox(
-                font, 0, 0,
-                contentWidth, 20,
-                Component.literal("Length:")
-        );
-        distanceInput.setValue("0");
-        form.addChild(distanceInput);
-
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal("Settings:"), font
-        ));
-
-        form.addChild(Button.builder(
-                Component.literal("Reversed"),
-                button -> {}
-        ).bounds(0, 0, contentWidth, 20).build());
-
-        form.addChild(Button.builder(
-                Component.literal("Setting A"),
-                button -> {}
-        ).bounds(0, 0, contentWidth, 20).build());
-
-        form.addChild(Button.builder(
-                Component.literal("Setting B"),
-                button -> {}
-        ).bounds(0, 0, contentWidth, 20).build());
-
-        form.addChild(Button.builder(
-                Component.literal("Setting C"),
-                button -> {}
-        ).bounds(0, 0, contentWidth, 20).build());
-
-        form.addChild(Button.builder(
-                Component.literal("Setting D"),
-                button -> {}
-        ).bounds(0, 0, contentWidth, 20).build());
-
-        form.addChild(Button.builder(
-                Component.literal("Setting E"),
-                button -> {}
-        ).bounds(0, 0, contentWidth, 20).build());
-
-        form.addChild(Button.builder(
-                Component.literal("Setting F"),
-                button -> {}
-        ).bounds(0, 0, contentWidth, 20).build());
-
-        form.addChild(Button.builder(
-                Component.literal("Setting G"),
-                button -> {}
-        ).bounds(0, 0, contentWidth, 20).build());
-
-        // Wrap the vertical layout in a scrollable container.
-        form.setX(contentX);
-        form.setY(contentY);
-
-        ScrollableLayout scrollable = new ScrollableLayout(
-                Minecraft.getInstance(),
-                form,
-                scrollHeight
-        );
-
-        scrollable.setX(contentX);
-        scrollable.setY(contentY);
-        scrollable.setMinWidth(contentWidth);
-        scrollable.arrangeElements();
-
-        // Register the scroll container with the screen.
-        scrollable.visitWidgets(this::addRenderableWidget);
-
-        // Fixed footer: these buttons don't scroll with the form.
-
-        // Execute Button
-        addRenderableWidget(Button.builder(
-                Component.literal("Execute"),
-                button -> submitForm()
-        ).bounds(
-                PAD*2, footerY + PAD, contentWidth, 20
-        ).build());
     }
 
     // Editor Labels
@@ -244,17 +99,162 @@ public class FormScreen extends Screen {
         }
     }
 
+    @Override
+    protected void init() {
+        // Panel background.
+        addRenderableWidget(new PanelBackground(
+                PAD, PAD, PANEL_WIDTH + PAD, PANEL_HEIGHT + PAD
+        ));
+
+        // Build the vertical stacked form.
+        LinearLayout form = LinearLayout.vertical()
+                .spacing(6);
+
+        form.addChild(new FormLabel(
+                contentWidth, font.lineHeight,
+                Component.literal("Layer Name:"), font
+        ));
+        // Layer name input
+        nameInput = new EditBox(
+                font, 0, 0,
+                contentWidth, 20,
+                Component.literal("Name")
+        );
+        nameInput.setMaxLength(32);
+        nameInput.setValue(nameValue);
+        nameInput.setHint(Component.literal("Layer name..."));
+        form.addChild(nameInput);
+
+        form.addChild(new FormLabel(
+                contentWidth, font.lineHeight,
+                Component.literal("Mode:"), font
+        ));
+
+        Button dropdownButton = Button.builder(
+                dropdownLabel(),
+                button -> {
+                    nameValue = nameInput.getValue();
+                    dropdownOpen = !dropdownOpen;
+                    rebuildWidgets();
+                }
+        ).bounds(0, 0, contentWidth, 20).build();
+
+        form.addChild(dropdownButton);
+
+        // Only add options while the dropdown is expanded.
+        if (dropdownOpen) {
+            for (String mode : MODES) {
+                Button option = Button.builder(
+                        Component.literal(
+                                (mode.equals(selectedMode) ? "✓ " : "") + mode
+                        ),
+                        button -> {
+                            nameValue = nameInput.getValue();
+                            selectedMode = mode;
+                            dropdownOpen = false;
+                            rebuildWidgets();
+                        }
+                ).bounds(0, 0, contentWidth, 20).build();
+
+                form.addChild(option);
+            }
+        }
+
+        form.addChild(new FormLabel(
+                contentWidth, font.lineHeight,
+                Component.literal("Length:"), font
+        ));
+        // Length
+        lengthInput = new EditBox(
+                font, 0, 0,
+                contentWidth, 20,
+                Component.literal("Length:")
+        );
+        lengthInput.setValue(lengthValue);
+        lengthInput.setResponder(value -> lengthValue = value);
+        form.addChild(lengthInput);
+
+        form.addChild(new FormLabel(
+                contentWidth, font.lineHeight,
+                Component.literal("Settings:"), font
+        ));
+
+        form.addChild(Button.builder(
+                Component.literal(reversed ? "Reversed: ON" : "Reversed: OFF"),
+                button -> {
+                    reversed = !reversed;
+
+                    button.setMessage(Component.literal(
+                            reversed ? "Reversed: ON" : "Reversed: OFF"
+                    ));
+                }
+        ).bounds(0, 0, contentWidth, 20).build());
+
+        form.addChild(Button.builder(
+                Component.literal("Setting A"),
+                button -> {}
+        ).bounds(0, 0, contentWidth, 20).build());
+
+        form.addChild(Button.builder(
+                Component.literal("Setting B"),
+                button -> {}
+        ).bounds(0, 0, contentWidth, 20).build());
+
+        // Wrap the vertical layout in a scrollable container.
+        form.setX(contentX);
+        form.setY(contentY);
+
+        ScrollableLayout scrollable = new ScrollableLayout(
+                Minecraft.getInstance(),
+                form,
+                scrollHeight
+        );
+
+        scrollable.setX(contentX);
+        scrollable.setY(contentY);
+        scrollable.setMinWidth(contentWidth);
+        scrollable.arrangeElements();
+
+        // Register the scroll container with the screen.
+        scrollable.visitWidgets(this::addRenderableWidget);
+
+        // Fixed footer
+        // Execute Button
+        addRenderableWidget(Button.builder(
+                Component.literal("Execute"),
+                button -> submitForm()
+        ).bounds(
+                PAD*2, footerY + PAD, contentWidth, 20
+        ).build());
+    }
+
     // Execute inputs
     private void submitForm() {
         String name = nameInput.getValue().trim();
+        int length;
 
-        if (name.isEmpty()) {
-            return;
+        try {
+            length = Integer.parseInt(lengthInput.getValue());
+        } catch (NumberFormatException e) {
+            System.out.println("Wrong length input!");
+            return; // Ignore invalid input
         }
 
-        // TODO: Connect this to your mod's actual functionality.
+        if (length < 0) {
+            // Negative
+            System.out.println("Invalid negative!");
+            return;
+        } else {
+            // Positive
+        }
+
+        System.out.println("length: " + length);
+
         System.out.println("Name: " + name);
         System.out.println("Mode: " + selectedMode);
+        System.out.println("Reversed: " + reversed);
+        System.out.println("Blocks: ");
+
 
         onClose();
     }

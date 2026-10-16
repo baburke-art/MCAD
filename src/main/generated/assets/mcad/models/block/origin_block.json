@@ -18,7 +18,7 @@
         "south": {"texture": "#south"},
         "east": {"texture": "#east"},
         "west": {"texture": "#west"},
-        "up": {"texture": "#up", "rotation": 90},
+        "up": {"texture": "#up", "rotation": 180},
         "down": {"texture": "#down"}
       }
     }

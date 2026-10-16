@@ -22,12 +22,12 @@ public class ModBlocks {
             "origin_block",
             properties -> new Block(
                     properties
-                            .strength(0.6F)
+                            .strength(0.5F)
                             .sound(SoundType.TRIAL_SPAWNER)
-                            .lightLevel(state -> 15)));
-
-
-
+                            .lightLevel(state -> 15)
+                            .noOcclusion()
+            )
+    );
 
     public static Block registerBlock(String name, Function<BlockBehaviour.Properties, Block> function) {
         Block toRegister = function.apply(BlockBehaviour.Properties.of().setId(ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(MCAD.MOD_ID, name))));
