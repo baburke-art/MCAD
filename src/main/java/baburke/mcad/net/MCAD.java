@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-
 public class MCAD implements ModInitializer {
 	public static final String MOD_ID = "mcad";
 

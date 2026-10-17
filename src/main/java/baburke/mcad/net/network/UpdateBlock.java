@@ -24,6 +24,7 @@ public record UpdateBlock(BlockPos pos, BlockState state)
                     UpdateBlock::state,
                     UpdateBlock::new
             );
+    
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

@@ -1,6 +1,6 @@
 package baburke.mcad.net.gui;
 
-import baburke.mcad.net.feature.Execute;
+import baburke.mcad.net.MCADClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -34,9 +34,8 @@ public class MCADEditor extends Screen {
     private EditBox nameInput;
     private String nameValue = "";
 
-    // Mode
-    //private Button dropdownButton;
-    //private Button[] optionButtons;
+    private EditBox sizeInput;
+    private String sizeValue = "";
 
     // Default mode
     private String selectedMode = "Extrude";
@@ -125,6 +124,21 @@ public class MCADEditor extends Screen {
         nameInput.setValue(nameValue);
         nameInput.setHint(Component.literal("Layer name..."));
         form.addChild(nameInput);
+
+        // Size label
+        form.addChild(new FormLabel(
+                contentWidth, font.lineHeight,
+                Component.literal("Size:"), font
+        ));
+        // Size input
+        sizeInput = new EditBox(
+                font, 0, 0,
+                contentWidth, 20,
+                Component.literal("Name")
+        );
+        sizeInput.setValue(sizeValue);
+        sizeInput.setResponder(value -> sizeValue = value);
+        form.addChild(sizeInput);
 
         form.addChild(new FormLabel(
                 contentWidth, font.lineHeight,
@@ -232,12 +246,21 @@ public class MCADEditor extends Screen {
     // Execute inputs
     private void submitForm() {
         String name = nameInput.getValue().trim();
+
+        int size;
         int length;
+
+        try {
+            size = Integer.parseInt(sizeInput.getValue());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid size input: " + sizeInput.getValue());
+            return;
+        }
 
         try {
             length = Integer.parseInt(lengthInput.getValue());
         } catch (NumberFormatException e) {
-            System.out.println("Invalid length input");
+            System.out.println("Invalid length input: " + lengthInput.getValue());
             return;
         }
 
@@ -247,7 +270,7 @@ public class MCADEditor extends Screen {
             return;
         } else {
             // Positive
-            new Execute().extrude();
+            new MCADClient().execute(size, length);
             System.out.println("New execute");
         }
 
@@ -255,8 +278,6 @@ public class MCADEditor extends Screen {
         System.out.println("Mode: " + selectedMode);
         System.out.println("length: " + length);
         System.out.println("Reversed: " + reversed);
-        System.out.println("Blocks: ");
-
 
         onClose();
     }
