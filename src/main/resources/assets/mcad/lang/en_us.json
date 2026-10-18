@@ -1,8 +1,8 @@
 {
   "item.mcad.fluorite": "Fluorite",
   "block.mcad.origin_block": "Origin Block",
+  "block.mcad.sketch_block": "Sketch Block",
 
   "key.category.mcad.general": "MCAD",
   "key.mcad.open_form": "Open/Close Editor"
-
 }

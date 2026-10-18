@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "mcad:block/sketch_block"
+    }
+  }
+}

@@ -35,7 +35,7 @@ public class MCADEditor extends Screen {
     private String nameValue = "";
 
     private EditBox sizeInput;
-    private String sizeValue = "";
+    private String sizeValue = "0";
 
     // Default mode
     private String selectedMode = "Extrude";
@@ -134,10 +134,16 @@ public class MCADEditor extends Screen {
         sizeInput = new EditBox(
                 font, 0, 0,
                 contentWidth, 20,
-                Component.literal("Name")
+                Component.literal("Size:")
         );
         sizeInput.setValue(sizeValue);
-        sizeInput.setResponder(value -> sizeValue = value);
+        sizeInput.setHint(Component.literal("0"));
+        // When input changes
+        sizeInput.setResponder(value -> {
+                    // (not working)
+                    sizeValue = value.isEmpty() ? "0" : value;
+
+        });
         form.addChild(sizeInput);
 
         form.addChild(new FormLabel(
@@ -186,7 +192,9 @@ public class MCADEditor extends Screen {
                 Component.literal("Length:")
         );
         lengthInput.setValue(lengthValue);
-        lengthInput.setResponder(value -> lengthValue = value);
+        lengthInput.setHint(Component.literal("0"));
+        // For implementing real time plane guide
+        //lengthInput.setResponder(value -> lengthValue = value);
         form.addChild(lengthInput);
 
         form.addChild(new FormLabel(
@@ -194,16 +202,17 @@ public class MCADEditor extends Screen {
                 Component.literal("Settings:"), font
         ));
 
-        form.addChild(Button.builder(
-                Component.literal(reversed ? "Reversed: ON" : "Reversed: OFF"),
-                button -> {
-                    reversed = !reversed;
-
-                    button.setMessage(Component.literal(
-                            reversed ? "Reversed: ON" : "Reversed: OFF"
-                    ));
-                }
-        ).bounds(0, 0, contentWidth, 20).build());
+        // I keep this for reference to the button type
+//        form.addChild(Button.builder(
+//                Component.literal(reversed ? "Reversed: ON" : "Reversed: OFF"),
+//                button -> {
+//                    reversed = !reversed;
+//
+//                    button.setMessage(Component.literal(
+//                            reversed ? "Reversed: ON" : "Reversed: OFF"
+//                    ));
+//                }
+//        ).bounds(0, 0, contentWidth, 20).build());
 
         form.addChild(Button.builder(
                 Component.literal("Setting A"),
@@ -252,6 +261,7 @@ public class MCADEditor extends Screen {
 
         try {
             size = Integer.parseInt(sizeInput.getValue());
+            System.out.println(size);
         } catch (NumberFormatException e) {
             System.out.println("Invalid size input: " + sizeInput.getValue());
             return;
