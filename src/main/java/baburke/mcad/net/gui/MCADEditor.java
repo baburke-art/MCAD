@@ -1,6 +1,8 @@
 package baburke.mcad.net.gui;
 
+import baburke.mcad.net.Direction;
 import baburke.mcad.net.MCADClient;
+import baburke.mcad.net.Mode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -34,12 +36,17 @@ public class MCADEditor extends Screen {
     private EditBox nameInput;
     private String nameValue = "";
 
+    // Size
     private EditBox sizeInput;
     private String sizeValue = "0";
 
+    // Direction of plane
+    private Direction selectedDirection = Direction.X;
+    private boolean directionDropdownOpen = false;
+
     // Default mode
-    private String selectedMode = "Extrude";
-    private boolean dropdownOpen = false;
+    private Mode selectedMode = Mode.EXTRUDE;
+    private boolean modeDropdownOpen = false;
 
     // Length input
     private EditBox lengthInput;
@@ -48,12 +55,14 @@ public class MCADEditor extends Screen {
     // Reverse length
     private boolean reversed = false;
 
-    private static final List<String> MODES =
-            List.of("Extrude", "Cut");
+    private Component modeDropdownLabel() {
+        return Component.literal(selectedMode.toString()
+                + (modeDropdownOpen ? "  ▲" : "  ▼"));
+    }
 
-    private Component dropdownLabel() {
-        return Component.literal(selectedMode
-                + (dropdownOpen ? "  ▲" : "  ▼"));
+    private Component directionDropdownLabel() {
+        return Component.literal(selectedDirection.toString()
+                + (directionDropdownOpen ? "  ▲" : "  ▼"));
     }
 
     public MCADEditor() {
@@ -110,11 +119,12 @@ public class MCADEditor extends Screen {
         LinearLayout form = LinearLayout.vertical()
                 .spacing(6);
 
+        // Name of sketch label
         form.addChild(new FormLabel(
                 contentWidth, font.lineHeight,
                 Component.literal("Layer Name:"), font
         ));
-        // Layer name input
+        // Sketch name input
         nameInput = new EditBox(
                 font, 0, 0,
                 contentWidth, 20,
@@ -138,7 +148,7 @@ public class MCADEditor extends Screen {
         );
         sizeInput.setValue(sizeValue);
         sizeInput.setHint(Component.literal("0"));
-        // When input changes
+        // When size input changes
         sizeInput.setResponder(value -> {
                     // (not working)
                     sizeValue = value.isEmpty() ? "0" : value;
@@ -146,46 +156,80 @@ public class MCADEditor extends Screen {
         });
         form.addChild(sizeInput);
 
+
+        // Sets the direction of the sketch plane
+        // Direction label
         form.addChild(new FormLabel(
                 contentWidth, font.lineHeight,
-                Component.literal("Mode:"), font
+                Component.literal("Direction:"), font
         ));
-
-        Button dropdownButton = Button.builder(
-                dropdownLabel(),
+        // Direction button
+        Button directionDropdownButton = Button.builder(
+                directionDropdownLabel(),
                 button -> {
                     nameValue = nameInput.getValue();
-                    dropdownOpen = !dropdownOpen;
+                    directionDropdownOpen = !directionDropdownOpen;
                     rebuildWidgets();
                 }
         ).bounds(0, 0, contentWidth, 20).build();
-
-        form.addChild(dropdownButton);
-
+        form.addChild(directionDropdownButton);
         // Only add options while the dropdown is expanded.
-        if (dropdownOpen) {
-            for (String mode : MODES) {
+        if (directionDropdownOpen) {
+            for (Direction direction : Direction.values()) {
                 Button option = Button.builder(
                         Component.literal(
-                                (mode.equals(selectedMode) ? "✓ " : "") + mode
+                                (direction == selectedDirection ? "✓ " : "") + direction
                         ),
                         button -> {
                             nameValue = nameInput.getValue();
-                            selectedMode = mode;
-                            dropdownOpen = false;
+                            selectedDirection = direction;
+                            directionDropdownOpen = false;
                             rebuildWidgets();
                         }
                 ).bounds(0, 0, contentWidth, 20).build();
-
                 form.addChild(option);
             }
         }
 
+        // Mode label
+        form.addChild(new FormLabel(
+                contentWidth, font.lineHeight,
+                Component.literal("Mode:"), font
+        ));
+        // Mode button
+        Button modeDropdownButton = Button.builder(
+                modeDropdownLabel(),
+                button -> {
+                    nameValue = nameInput.getValue();
+                    modeDropdownOpen = !modeDropdownOpen;
+                    rebuildWidgets();
+                }
+        ).bounds(0, 0, contentWidth, 20).build();
+        form.addChild(modeDropdownButton);
+        // Only add options while the dropdown is expanded.
+        if (modeDropdownOpen) {
+            for (Mode mode : Mode.values()) {
+                Button option = Button.builder(
+                        Component.literal(
+                                (mode == selectedMode ? "✓ " : "") + mode
+                        ),
+                        button -> {
+                            nameValue = nameInput.getValue();
+                            selectedMode = mode;
+                            modeDropdownOpen = false;
+                            rebuildWidgets();
+                        }
+                ).bounds(0, 0, contentWidth, 20).build();
+                form.addChild(option);
+            }
+        }
+
+        // Length label
         form.addChild(new FormLabel(
                 contentWidth, font.lineHeight,
                 Component.literal("Length:"), font
         ));
-        // Length
+        // Length input
         lengthInput = new EditBox(
                 font, 0, 0,
                 contentWidth, 20,
@@ -194,33 +238,27 @@ public class MCADEditor extends Screen {
         lengthInput.setValue(lengthValue);
         lengthInput.setHint(Component.literal("0"));
         // For implementing real time plane guide
-        //lengthInput.setResponder(value -> lengthValue = value);
+        // When length input changes
+        lengthInput.setResponder(value -> {
+            lengthValue = value.isEmpty() ? "0" : value;
+
+        });
         form.addChild(lengthInput);
 
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal("Settings:"), font
-        ));
-
-        // I keep this for reference to the button type
-//        form.addChild(Button.builder(
-//                Component.literal(reversed ? "Reversed: ON" : "Reversed: OFF"),
-//                button -> {
-//                    reversed = !reversed;
-//
-//                    button.setMessage(Component.literal(
-//                            reversed ? "Reversed: ON" : "Reversed: OFF"
-//                    ));
-//                }
-//        ).bounds(0, 0, contentWidth, 20).build());
-
+        // Reverse the direction of the plane
         form.addChild(Button.builder(
-                Component.literal("Setting A"),
-                button -> {}
+                Component.literal(reversed ? "Reversed: ON" : "Reversed: OFF"),
+                button -> {
+                    reversed = !reversed;
+
+                    button.setMessage(Component.literal(
+                            reversed ? "Reversed: ON" : "Reversed: OFF"
+                    ));
+                }
         ).bounds(0, 0, contentWidth, 20).build());
 
         form.addChild(Button.builder(
-                Component.literal("Setting B"),
+                Component.literal("Setting A"),
                 button -> {}
         ).bounds(0, 0, contentWidth, 20).build());
 
@@ -254,40 +292,13 @@ public class MCADEditor extends Screen {
 
     // Execute inputs
     private void submitForm() {
-        String name = nameInput.getValue().trim();
-
-        int size;
-        int length;
-
-        try {
-            size = Integer.parseInt(sizeInput.getValue());
-            System.out.println(size);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid size input: " + sizeInput.getValue());
-            return;
-        }
-
-        try {
-            length = Integer.parseInt(lengthInput.getValue());
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid length input: " + lengthInput.getValue());
-            return;
-        }
-
-        if (length < 0) {
-            // Negative
-            System.out.println("Invalid negative!");
-            return;
-        } else {
-            // Positive
-            new MCADClient().execute(size, length);
-            System.out.println("New execute");
-        }
-
-        System.out.println("Name: " + name);
-        System.out.println("Mode: " + selectedMode);
-        System.out.println("length: " + length);
-        System.out.println("Reversed: " + reversed);
+        MCADClient.execute(
+                nameInput.getValue(),
+                sizeInput.getValue(),
+                selectedMode,
+                selectedDirection,
+                lengthInput.getValue(),
+                reversed);
 
         onClose();
     }

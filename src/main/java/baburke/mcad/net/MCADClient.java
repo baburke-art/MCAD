@@ -1,26 +1,33 @@
 package baburke.mcad.net;
 
 import baburke.mcad.net.feature.Sketch;
-import baburke.mcad.net.feature.Execute;
 import baburke.mcad.net.feature.OriginBlock;
 import baburke.mcad.net.gui.MCADEditor;
 
+import baburke.mcad.net.network.UpdateBlocks;
 import com.mojang.blaze3d.platform.InputConstants;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.NonNull;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class MCADClient implements ClientModInitializer {
+
+    private static final int MAX_LENGTH = 200;
 
     // Defines Keybind category
     private static final KeyMapping.Category CATEGORY =
@@ -42,7 +49,6 @@ public class MCADClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-
         // Open/Close MCAD Editor GUI
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (OPEN_FORM.consumeClick()) {
@@ -57,27 +63,136 @@ public class MCADClient implements ClientModInitializer {
         });
     }
 
-    public void execute(int size, int length){
+    public static void execute(
+            String name,
+            String sizeInput,
+            Mode mode,
+            Direction direction,
+            String lengthInput,
+            boolean reversed
+    ){
+        int size;
+        int length;
+
+        try {
+            size = Integer.parseInt(sizeInput);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid size: " + sizeInput);
+            return;
+        }
+        try {
+            length = Integer.parseInt(lengthInput);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid length: " + lengthInput);
+            return;
+        }
+
+        // Validate length and size
+        if(length == 0 || size == 0) {return;}
+        if (length < 0 || size < 0) {
+            System.out.println("Invalid negative!");
+            return;
+        }
+        if (length > MAX_LENGTH) {
+            System.out.println("Max length is 100!");
+            return;
+        }
+        if (size > MAX_LENGTH) {
+            System.out.println("Max size is 100!");
+            return;
+        }
+
+        //MCADClient.execute(size, length, reversed);
+
+        System.out.println("Name: " + name);
+        System.out.println("Size: " + size);
+        System.out.println("Direction: " + direction);
+        System.out.println("Mode: " + mode);
+        System.out.println("length: " + length);
+        System.out.println("Reversed: " + reversed);
 
         Minecraft client = Minecraft.getInstance();
-
         BlockPos playerPos = client.player.blockPosition();
         ClientLevel level = client.level;
 
-        // try to find an origin block within 50 blocks of player
-        BlockPos pos = new OriginBlock().nearestOriginBlock(level, playerPos, 50);
+        // try to find an origin block within max length of player
+        BlockPos origin = new OriginBlock().nearestOriginBlock(level, playerPos, MAX_LENGTH);
+
+        if (origin == null) {
+            System.out.println("Origin Block not found!");
+            return;
+        }
 
         // If a nearby origin block is found
-        if (pos != null) {
-            System.out.println("Origin Block found!: " + pos);
-            // Find active blocks next to origin block with size 10 rectangle
-            // Add variable for orientation and
-            Map<BlockPos, BlockState> blocks =
-                    new Sketch().findBlocks(level, pos, size); // test size 10 blocks
+        System.out.println("Origin Block found!: " + origin);
+        // the start and end blocks of the sketch plane
+        BlockPos startBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ());
+        BlockPos endBlock = switch (direction) {
+            case X -> {
+                startBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ() + 1);
+                yield startBlock.offset(0, size - 1, size - 1);
+            }
+            case Y -> {
+                startBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ() + 1);
+                yield startBlock.offset(size - 1, 0, size - 1);
+            }
+            case Z -> {
+                startBlock = new BlockPos(origin.getX() - 1, origin.getY(), origin.getZ());
+                yield startBlock.offset(-size + 1, size - 1, 0);
+            }
+        };
 
-            // Change to blocks list map instead of pos
-            new Execute().extrude(client, blocks, length);
+        // Find active blocks next to origin block
+        Map<BlockPos, BlockState> activeBlocks =
+                new Sketch().findActiveBlocks(level, origin, size, startBlock, endBlock);
+
+        // For each block in map
+        for (Map.Entry<BlockPos, BlockState> entry : activeBlocks.entrySet()) {
+            // Map of the blocks along the full length of one active block at a time
+            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(direction, entry, length);
+
+            if (mode == Mode.EXTRUDE) {
+                ClientPlayNetworking.send(
+                        UpdateBlocks.place(nextBlocks)
+                );
+            } else if (mode == Mode.CUT) {
+                ClientPlayNetworking.send(
+                        UpdateBlocks.destroy(nextBlocks.keySet())
+                );
+            }
+
+            // use a Map<BlockPos, BlockState> to build the structure, then convert it into a bounded List<BlockEntry> for each network batch.
+            // This keeps storage convenient and network transfers manageable.
+
+            // To Send multiple blocks create payload
+//                UpdateBlock payload = UpdateBlock.place(
+//                        pos,
+//                        Blocks.STONE.defaultBlockState()
+//                );
+//
+//                ClientPlayNetworking.send(payload);
         }
 
     }
+
+    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Direction direction, Map.Entry<BlockPos, BlockState> entry, int length) {
+        BlockPos pos = entry.getKey();
+        BlockState state = entry.getValue();
+
+        Map<BlockPos, BlockState> blockLine = new HashMap<>();
+
+        for (int i = 0; i < length; i++) {
+            // Suggestion changed it to an 'advanced' switch statement
+            pos.offset(i, 0, 0);
+            BlockPos nextPos = switch (direction) {
+                case X -> pos.offset(i, 0, 0);
+                case Y -> pos.offset(0, i, 0);
+                case Z -> pos.offset(0, 0, i);
+            };
+            blockLine.put(nextPos, state);
+        }
+        return blockLine;
+    }
+
+
 }

@@ -29,17 +29,6 @@ public class ModBlocks {
             )
     );
 
-    public static final Block SKETCH_BLOCK =  registerBlock(
-            "sketch_block",
-            properties -> new Block(
-                    properties
-                            .strength(0.5F)
-                            .sound(SoundType.TRIAL_SPAWNER)
-                            .lightLevel(state -> 15)
-                            .noOcclusion()
-            )
-    );
-
     public static Block registerBlock(String name, Function<BlockBehaviour.Properties, Block> function) {
         Block toRegister = function.apply(BlockBehaviour.Properties.of().setId(ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(MCAD.MOD_ID, name))));
 
@@ -61,10 +50,6 @@ public class ModBlocks {
 
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(output -> {
             output.accept(ORIGIN_BLOCK);
-        });
-
-        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(output -> {
-            output.accept(SKETCH_BLOCK);
         });
     }
 

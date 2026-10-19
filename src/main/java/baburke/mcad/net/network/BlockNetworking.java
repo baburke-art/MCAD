@@ -1,47 +1,61 @@
 package baburke.mcad.net.network;
 
-
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public final class BlockNetworking {
+
+    private static final double MAX_DISTANCE_SQUARED = 100 * 100;
+    private static final int MAX_BLOCKS_PER_PACKET = 500;
 
     private BlockNetworking() {}
 
     public static void register() {
-        // Register the payload type
+        // Register the serverbound payload
         PayloadTypeRegistry.serverboundPlay().register(
-                UpdateBlock.TYPE,
-                UpdateBlock.CODEC
+                UpdateBlocks.TYPE,
+                UpdateBlocks.CODEC
         );
 
-        // Register the server receiver
+        // Register the receiver
         ServerPlayNetworking.registerGlobalReceiver(
-                UpdateBlock.TYPE,
+                UpdateBlocks.TYPE,
                 (payload, context) -> {
                     var player = context.player();
 
-                    var pos = payload.pos();
-                    var state = payload.state();
+                    // Copy the payload data before scheduling world changes.
+                    Map<BlockPos, BlockState> blocks = new HashMap<>(payload.blocks());
 
-                    var level = player.level();
+                    context.server().execute(() -> {
+                        Level level = player.level();
 
-                    // Only allow changes within 48 blocks
-                    if (player.blockPosition().distSqr(pos) > 2304) {
-                        System.out.println("Player too far to execute!");
-                        return;
-                    }
+                        // Enforce the packet block limit.
+                        if (blocks.size() > MAX_BLOCKS_PER_PACKET) {
+                            return;
+                        }
 
-                    // Don't modify unloaded positions
-                    if (!level.isLoaded(pos)) {
-                        return;
-                    }
+                        for (var entry : blocks.entrySet()) {
+                            BlockPos pos = entry.getKey();
+                            BlockState state = entry.getValue();
 
-                    // Destroy or place/replace the block
-                    //level.destroyBlock(pos, true, player);
+                            // Don't modify unloaded positions.
+                            if (!level.isLoaded(pos)) {
+                                continue;
+                            }
 
-                    // Place block
-                    level.setBlock(pos, state, 3);
+                            // Check if player has person to modify each position
+                            // Check whether the packet rate is reasonable to prevent spam.
+
+                            // Apply the block update.
+                            level.setBlock(pos, state, 3);
+                        }
+                    });
                 }
         );
     }
