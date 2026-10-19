@@ -52,6 +52,9 @@ public class MCADEditor extends Screen {
     private EditBox lengthInput;
     private String lengthValue = "0";
 
+    private EditBox intervalInput;
+    private String intervalValue = "0";
+
     // Reverse length
     private boolean reversed = false;
 
@@ -119,21 +122,21 @@ public class MCADEditor extends Screen {
         LinearLayout form = LinearLayout.vertical()
                 .spacing(6);
 
-        // Name of sketch label
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal("Layer Name:"), font
-        ));
-        // Sketch name input
-        nameInput = new EditBox(
-                font, 0, 0,
-                contentWidth, 20,
-                Component.literal("Name")
-        );
-        nameInput.setMaxLength(32);
-        nameInput.setValue(nameValue);
-        nameInput.setHint(Component.literal("Layer name..."));
-        form.addChild(nameInput);
+//        // Name of sketch label
+//        form.addChild(new FormLabel(
+//                contentWidth, font.lineHeight,
+//                Component.literal("Layer Name:"), font
+//        ));
+//        // Sketch name input
+//        nameInput = new EditBox(
+//                font, 0, 0,
+//                contentWidth, 20,
+//                Component.literal("Name")
+//        );
+//        nameInput.setMaxLength(32);
+//        nameInput.setValue(nameValue);
+//        nameInput.setHint(Component.literal("Layer name..."));
+//        form.addChild(nameInput);
 
         // Size label
         form.addChild(new FormLabel(
@@ -245,6 +248,26 @@ public class MCADEditor extends Screen {
         });
         form.addChild(lengthInput);
 
+        // Interval label
+        form.addChild(new FormLabel(
+                contentWidth, font.lineHeight,
+                Component.literal("Interval:"), font
+        ));
+        // Interval input
+        intervalInput = new EditBox(
+                font, 0, 0,
+                contentWidth, 20,
+                Component.literal("Interval:")
+        );
+        intervalInput.setValue(intervalValue);
+        intervalInput.setHint(Component.literal("0"));
+        // When Interval input changes
+        intervalInput.setResponder(value -> {
+            intervalValue = value.isEmpty() ? "0" : value;
+
+        });
+        form.addChild(intervalInput);
+
         // Reverse the direction of the plane
         form.addChild(Button.builder(
                 Component.literal(reversed ? "Reversed: ON" : "Reversed: OFF"),
@@ -257,10 +280,16 @@ public class MCADEditor extends Screen {
                 }
         ).bounds(0, 0, contentWidth, 20).build());
 
-        form.addChild(Button.builder(
-                Component.literal("Setting A"),
-                button -> {}
-        ).bounds(0, 0, contentWidth, 20).build());
+//        form.addChild(Button.builder(
+//                Component.literal("Setting A"),
+//                button -> {}
+//        ).bounds(0, 0, contentWidth, 20).build());
+
+        // Add spacing after the last form element.
+        form.addChild(new FormLabel(
+                contentWidth, font.lineHeight,
+                Component.literal(""), font
+        ));
 
         // Wrap the vertical layout in a scrollable container.
         form.setX(contentX);
@@ -293,7 +322,7 @@ public class MCADEditor extends Screen {
     // Execute inputs
     private void submitForm() {
         MCADClient.execute(
-                nameInput.getValue(),
+                //nameInput.getValue(),
                 sizeInput.getValue(),
                 selectedMode,
                 selectedDirection,

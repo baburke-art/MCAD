@@ -64,7 +64,7 @@ public class MCADClient implements ClientModInitializer {
     }
 
     public static void execute(
-            String name,
+            //String name,
             String sizeInput,
             Mode mode,
             Direction direction,
@@ -104,7 +104,7 @@ public class MCADClient implements ClientModInitializer {
 
         //MCADClient.execute(size, length, reversed);
 
-        System.out.println("Name: " + name);
+        //System.out.println("Name: " + name);
         System.out.println("Size: " + size);
         System.out.println("Direction: " + direction);
         System.out.println("Mode: " + mode);
@@ -149,7 +149,7 @@ public class MCADClient implements ClientModInitializer {
         // For each block in map
         for (Map.Entry<BlockPos, BlockState> entry : activeBlocks.entrySet()) {
             // Map of the blocks along the full length of one active block at a time
-            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(direction, entry, length);
+            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(length, direction, reversed, entry);
 
             if (mode == Mode.EXTRUDE) {
                 ClientPlayNetworking.send(
@@ -175,13 +175,16 @@ public class MCADClient implements ClientModInitializer {
 
     }
 
-    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Direction direction, Map.Entry<BlockPos, BlockState> entry, int length) {
+    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(int length, Direction direction, boolean reversed, Map.Entry<BlockPos, BlockState> entry) {
         BlockPos pos = entry.getKey();
         BlockState state = entry.getValue();
 
         Map<BlockPos, BlockState> blockLine = new HashMap<>();
 
-        for (int i = 0; i < length; i++) {
+        // If reversed set line path to negative
+        //int mod = (reversed ? 1 : -1);
+
+        for (int i = 0; i < length;) {
             // Suggestion changed it to an 'advanced' switch statement
             pos.offset(i, 0, 0);
             BlockPos nextPos = switch (direction) {
@@ -190,6 +193,8 @@ public class MCADClient implements ClientModInitializer {
                 case Z -> pos.offset(0, 0, i);
             };
             blockLine.put(nextPos, state);
+
+            if (reversed) {i--;} else {i++;}
         }
         return blockLine;
     }
