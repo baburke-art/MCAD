@@ -149,7 +149,7 @@ public class MCADClient implements ClientModInitializer {
         // For each block in map
         for (Map.Entry<BlockPos, BlockState> entry : activeBlocks.entrySet()) {
             // Map of the blocks along the full length of one active block at a time
-            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(direction, entry, length);
+            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(length, direction, reversed, entry);
 
             if (mode == Mode.EXTRUDE) {
                 ClientPlayNetworking.send(
@@ -175,19 +175,22 @@ public class MCADClient implements ClientModInitializer {
 
     }
 
-    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Direction direction, Map.Entry<BlockPos, BlockState> entry, int length) {
+    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(int length, Direction direction, boolean reversed, Map.Entry<BlockPos, BlockState> entry) {
         BlockPos pos = entry.getKey();
         BlockState state = entry.getValue();
 
         Map<BlockPos, BlockState> blockLine = new HashMap<>();
 
+        int inverted = 0;
+        if (reversed) {inverted = -1;}
+
         for (int i = 0; i < length; i++) {
             // Suggestion changed it to an 'advanced' switch statement
             pos.offset(i, 0, 0);
             BlockPos nextPos = switch (direction) {
-                case X -> pos.offset(i, 0, 0);
-                case Y -> pos.offset(0, i, 0);
-                case Z -> pos.offset(0, 0, i);
+                case X -> pos.offset(inverted * i, 0, 0);
+                case Y -> pos.offset(0, inverted * i, 0);
+                case Z -> pos.offset(0, 0, inverted * i);
             };
             blockLine.put(nextPos, state);
         }
