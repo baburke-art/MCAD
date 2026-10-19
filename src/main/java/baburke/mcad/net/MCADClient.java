@@ -181,9 +181,6 @@ public class MCADClient implements ClientModInitializer {
 
         Map<BlockPos, BlockState> blockLine = new HashMap<>();
 
-        // If reversed set line path to negative
-        //int mod = (reversed ? 1 : -1);
-
         for (int i = 0; i < length;) {
             // Suggestion changed it to an 'advanced' switch statement
             pos.offset(i, 0, 0);
@@ -194,6 +191,7 @@ public class MCADClient implements ClientModInitializer {
             };
             blockLine.put(nextPos, state);
 
+            // If reversed set line path to negative
             if (reversed) {i--;} else {i++;}
         }
         return blockLine;
