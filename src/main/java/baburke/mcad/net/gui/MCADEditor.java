@@ -9,14 +9,11 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.ScrollableLayout;
-import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-
-import javax.swing.*;
-import java.util.List;
+import org.jspecify.annotations.NonNull;
 
 public class MCADEditor extends Screen {
 
@@ -107,7 +104,7 @@ public class MCADEditor extends Screen {
 
         @Override
         protected void updateWidgetNarration(
-                NarrationElementOutput narration
+                @NonNull NarrationElementOutput narration
         ) {
         }
     }
@@ -147,13 +144,8 @@ public class MCADEditor extends Screen {
         sizeInput.setValue(sizeValue);
         sizeInput.setHint(Component.literal("0"));
         // When size input changes
-        sizeInput.setResponder(value -> {
-                    // (not working)
-                    sizeValue = value.isEmpty() ? "0" : value;
-
-        });
+        sizeInput.setResponder(value -> sizeValue = value.isEmpty() ? "0" : value);
         form.addChild(sizeInput);
-
 
         // Sets the direction of the sketch plane
         // Direction label
@@ -228,10 +220,8 @@ public class MCADEditor extends Screen {
         lengthInput.setHint(Component.literal("0"));
         // For implementing real time plane guide
         // When length input changes
-        lengthInput.setResponder(value -> {
-            lengthValue = value.isEmpty() ? "0" : value;
-
-        });
+        lengthInput.setResponder(value ->
+            lengthValue = value.isEmpty() ? "0" : value);
         form.addChild(lengthInput);
 
         // Interval label
@@ -245,10 +235,8 @@ public class MCADEditor extends Screen {
         intervalInput.setValue(intervalValue);
         intervalInput.setHint(Component.literal("0"));
         // When Interval input changes
-        intervalInput.setResponder(value -> {
-            intervalValue = value.isEmpty() ? "0" : value;
-
-        });
+        intervalInput.setResponder(value ->
+            intervalValue = value.isEmpty() ? "0" : value);
         form.addChild(intervalInput);
 
         // Reverse the direction of the plane
@@ -315,7 +303,6 @@ public class MCADEditor extends Screen {
                 selectedDirection,
                 lengthInput.getValue(),
                 reversed);
-
         onClose();
     }
 

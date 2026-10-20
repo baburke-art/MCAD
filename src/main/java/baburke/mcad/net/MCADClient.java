@@ -126,19 +126,16 @@ public class MCADClient implements ClientModInitializer {
         // If a nearby origin block is found
         System.out.println("Origin Block found!: " + origin);
         // the start and end blocks of the sketch plane
-        BlockPos startBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ());
+        BlockPos startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
         BlockPos endBlock = switch (direction) {
             case X -> {
-                startBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ() + 1);
                 yield startBlock.offset(0, size - 1, size - 1);
             }
             case Y -> {
-                startBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ() + 1);
                 yield startBlock.offset(size - 1, 0, size - 1);
             }
             case Z -> {
-                startBlock = new BlockPos(origin.getX() - 1, origin.getY(), origin.getZ());
-                yield startBlock.offset(-size + 1, size - 1, 0);
+                yield startBlock.offset(size - 1, size - 1, 0);
             }
         };
 
@@ -160,19 +157,7 @@ public class MCADClient implements ClientModInitializer {
                         UpdateBlocks.destroy(nextBlocks.keySet())
                 );
             }
-
-            // use a Map<BlockPos, BlockState> to build the structure, then convert it into a bounded List<BlockEntry> for each network batch.
-            // This keeps storage convenient and network transfers manageable.
-
-            // To Send multiple blocks create payload
-//                UpdateBlock payload = UpdateBlock.place(
-//                        pos,
-//                        Blocks.STONE.defaultBlockState()
-//                );
-//
-//                ClientPlayNetworking.send(payload);
         }
-
     }
 
     private static @NonNull Map<BlockPos, BlockState> getNextBlocks(int length, Direction direction, boolean reversed, Map.Entry<BlockPos, BlockState> entry) {
