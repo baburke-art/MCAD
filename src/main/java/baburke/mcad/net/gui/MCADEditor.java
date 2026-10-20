@@ -9,6 +9,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.ScrollableLayout;
+import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
@@ -122,27 +123,21 @@ public class MCADEditor extends Screen {
         LinearLayout form = LinearLayout.vertical()
                 .spacing(6);
 
-//        // Name of sketch label
-//        form.addChild(new FormLabel(
-//                contentWidth, font.lineHeight,
-//                Component.literal("Layer Name:"), font
-//        ));
-//        // Sketch name input
-//        nameInput = new EditBox(
-//                font, 0, 0,
-//                contentWidth, 20,
-//                Component.literal("Name")
-//        );
-//        nameInput.setMaxLength(32);
-//        nameInput.setValue(nameValue);
-//        nameInput.setHint(Component.literal("Layer name..."));
-//        form.addChild(nameInput);
+        // Name of sketch label
+        form.addChild(addLabel("Name:"));
+        // Sketch name input
+        nameInput = new EditBox(
+                font, 0, 0,
+                contentWidth, 20,
+                Component.literal("Name")
+        );
+        nameInput.setMaxLength(32);
+        nameInput.setValue(nameValue);
+        nameInput.setHint(Component.literal("Layer name..."));
+        form.addChild(nameInput);
 
         // Size label
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal("Size:"), font
-        ));
+        form.addChild(addLabel("Size:"));
         // Size input
         sizeInput = new EditBox(
                 font, 0, 0,
@@ -162,10 +157,7 @@ public class MCADEditor extends Screen {
 
         // Sets the direction of the sketch plane
         // Direction label
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal("Direction:"), font
-        ));
+        form.addChild(addLabel("Direction:"));
         // Direction button
         Button directionDropdownButton = Button.builder(
                 directionDropdownLabel(),
@@ -195,10 +187,7 @@ public class MCADEditor extends Screen {
         }
 
         // Mode label
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal("Mode:"), font
-        ));
+        form.addChild(addLabel("Mode:"));
         // Mode button
         Button modeDropdownButton = Button.builder(
                 modeDropdownLabel(),
@@ -228,10 +217,7 @@ public class MCADEditor extends Screen {
         }
 
         // Length label
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal("Length:"), font
-        ));
+        form.addChild(addLabel("Length:"));
         // Length input
         lengthInput = new EditBox(
                 font, 0, 0,
@@ -249,10 +235,7 @@ public class MCADEditor extends Screen {
         form.addChild(lengthInput);
 
         // Interval label
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal("Interval:"), font
-        ));
+        form.addChild(addLabel("Interval:"));
         // Interval input
         intervalInput = new EditBox(
                 font, 0, 0,
@@ -286,10 +269,7 @@ public class MCADEditor extends Screen {
 //        ).bounds(0, 0, contentWidth, 20).build());
 
         // Add spacing after the last form element.
-        form.addChild(new FormLabel(
-                contentWidth, font.lineHeight,
-                Component.literal(""), font
-        ));
+        form.addChild(addLabel(""));
 
         // Wrap the vertical layout in a scrollable container.
         form.setX(contentX);
@@ -317,6 +297,13 @@ public class MCADEditor extends Screen {
         ).bounds(
                 PAD*2, footerY + PAD, contentWidth, 20
         ).build());
+    }
+
+    private FormLabel addLabel(String label) {
+        return new FormLabel(
+                contentWidth, font.lineHeight,
+                Component.literal(label), font
+        );
     }
 
     // Execute inputs

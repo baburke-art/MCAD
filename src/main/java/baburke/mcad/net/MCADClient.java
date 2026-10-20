@@ -181,18 +181,18 @@ public class MCADClient implements ClientModInitializer {
 
         Map<BlockPos, BlockState> blockLine = new HashMap<>();
 
-        for (int i = 0; i < length;) {
-            // Suggestion changed it to an 'advanced' switch statement.
-            pos.offset(i, 0, 0);
-            BlockPos nextPos = switch (direction) {
-                case X -> pos.offset(i, 0, 0);
-                case Y -> pos.offset(0, i, 0);
-                case Z -> pos.offset(0, 0, i);
-            };
-            blockLine.put(nextPos, state);
+        int step = reversed ? -1 : 1;
 
-            // If reversed set line path to negative
-            if (reversed) {i--;} else {i++;}
+        for (int i = 0; i < length; i++) {
+            int offset = i * step;
+
+            BlockPos nextPos = switch (direction) {
+                case X -> pos.offset(offset, 0, 0);
+                case Y -> pos.offset(0, offset, 0);
+                case Z -> pos.offset(0, 0, offset);
+            };
+
+            blockLine.put(nextPos, state);
         }
         return blockLine;
     }
