@@ -65,14 +65,16 @@ public class MCADClient implements ClientModInitializer {
 
     public static void execute(
             //String name,
-            String sizeInput,
             Mode mode,
+            String sizeInput,
             Direction direction,
             String lengthInput,
-            boolean reversed
+            boolean reversed,
+            String intervalInput
     ){
         int size;
         int length;
+        int interval;
 
         try {
             size = Integer.parseInt(sizeInput);
@@ -84,6 +86,12 @@ public class MCADClient implements ClientModInitializer {
             length = Integer.parseInt(lengthInput);
         } catch (NumberFormatException e) {
             System.out.println("Invalid length: " + lengthInput);
+            return;
+        }
+        try {
+            interval = Integer.parseInt(intervalInput);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid interval: " + intervalInput);
             return;
         }
 
@@ -102,14 +110,17 @@ public class MCADClient implements ClientModInitializer {
             return;
         }
 
+        if (interval > MAX_LENGTH || interval < 0) {interval = 0;}
+
         //MCADClient.execute(size, length, reversed);
 
         //System.out.println("Name: " + name);
+        System.out.println("Mode: " + mode);
         System.out.println("Size: " + size);
         System.out.println("Direction: " + direction);
-        System.out.println("Mode: " + mode);
         System.out.println("length: " + length);
         System.out.println("Reversed: " + reversed);
+        System.out.println("Interval: " + interval);
 
         Minecraft client = Minecraft.getInstance();
         BlockPos playerPos = client.player.blockPosition();
@@ -146,7 +157,7 @@ public class MCADClient implements ClientModInitializer {
         // For each block in map
         for (Map.Entry<BlockPos, BlockState> entry : activeBlocks.entrySet()) {
             // Map of the blocks along the full length of one active block at a time
-            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(length, direction, reversed, entry);
+            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(direction, length, reversed, interval, entry);
 
             if (mode == Mode.EXTRUDE) {
                 ClientPlayNetworking.send(
@@ -160,7 +171,7 @@ public class MCADClient implements ClientModInitializer {
         }
     }
 
-    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(int length, Direction direction, boolean reversed, Map.Entry<BlockPos, BlockState> entry) {
+    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Direction direction, int length, boolean reversed, int interval, Map.Entry<BlockPos, BlockState> entry) {
         BlockPos pos = entry.getKey();
         BlockState state = entry.getValue();
 
@@ -168,7 +179,10 @@ public class MCADClient implements ClientModInitializer {
 
         int step = reversed ? -1 : 1;
 
-        for (int i = 0; i < length; i++) {
+        // counting up to interval
+        int skip = 0;
+
+        for (int i = 1; i < length; i++) {
             int offset = i * step;
 
             BlockPos nextPos = switch (direction) {
@@ -177,7 +191,13 @@ public class MCADClient implements ClientModInitializer {
                 case Z -> pos.offset(0, 0, offset);
             };
 
-            blockLine.put(nextPos, state);
+            // Place next block each time interval is reached
+            if (skip == interval) {
+                blockLine.put(nextPos, state);
+                skip = 0;
+            } else {
+                skip++;
+            }
         }
         return blockLine;
     }

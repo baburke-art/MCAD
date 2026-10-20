@@ -34,6 +34,10 @@ public class MCADEditor extends Screen {
     private EditBox nameInput;
     private String nameValue = "";
 
+    // Default mode
+    private Mode selectedMode = Mode.EXTRUDE;
+    private boolean modeDropdownOpen = false;
+
     // Size
     private EditBox sizeInput;
     private String sizeValue = "0";
@@ -42,19 +46,17 @@ public class MCADEditor extends Screen {
     private Direction selectedDirection = Direction.X;
     private boolean directionDropdownOpen = false;
 
-    // Default mode
-    private Mode selectedMode = Mode.EXTRUDE;
-    private boolean modeDropdownOpen = false;
-
     // Length input
     private EditBox lengthInput;
     private String lengthValue = "0";
 
+    // Reverse length
+    private boolean reversed = false;
+
+    // Interval between blocks
     private EditBox intervalInput;
     private String intervalValue = "0";
 
-    // Reverse length
-    private boolean reversed = false;
 
     private Component modeDropdownLabel() {
         return Component.literal(selectedMode.toString()
@@ -133,6 +135,36 @@ public class MCADEditor extends Screen {
         nameInput.setHint(Component.literal("Layer name..."));
         form.addChild(nameInput);
 
+        // Mode label
+        form.addChild(addLabel("Mode:"));
+        // Mode button
+        Button modeDropdownButton = Button.builder(
+                modeDropdownLabel(),
+                button -> {
+                    nameValue = nameInput.getValue();
+                    modeDropdownOpen = !modeDropdownOpen;
+                    rebuildWidgets();
+                }
+        ).bounds(0, 0, contentWidth, 20).build();
+        form.addChild(modeDropdownButton);
+        // Only add options while the dropdown is expanded.
+        if (modeDropdownOpen) {
+            for (Mode mode : Mode.values()) {
+                Button option = Button.builder(
+                        Component.literal(
+                                (mode == selectedMode ? "✓ " : "") + mode
+                        ),
+                        button -> {
+                            nameValue = nameInput.getValue();
+                            selectedMode = mode;
+                            modeDropdownOpen = false;
+                            rebuildWidgets();
+                        }
+                ).bounds(0, 0, contentWidth, 20).build();
+                form.addChild(option);
+            }
+        }
+
         // Size label
         form.addChild(addLabel("Size:"));
         // Size input
@@ -178,36 +210,6 @@ public class MCADEditor extends Screen {
             }
         }
 
-        // Mode label
-        form.addChild(addLabel("Mode:"));
-        // Mode button
-        Button modeDropdownButton = Button.builder(
-                modeDropdownLabel(),
-                button -> {
-                    nameValue = nameInput.getValue();
-                    modeDropdownOpen = !modeDropdownOpen;
-                    rebuildWidgets();
-                }
-        ).bounds(0, 0, contentWidth, 20).build();
-        form.addChild(modeDropdownButton);
-        // Only add options while the dropdown is expanded.
-        if (modeDropdownOpen) {
-            for (Mode mode : Mode.values()) {
-                Button option = Button.builder(
-                        Component.literal(
-                                (mode == selectedMode ? "✓ " : "") + mode
-                        ),
-                        button -> {
-                            nameValue = nameInput.getValue();
-                            selectedMode = mode;
-                            modeDropdownOpen = false;
-                            rebuildWidgets();
-                        }
-                ).bounds(0, 0, contentWidth, 20).build();
-                form.addChild(option);
-            }
-        }
-
         // Length label
         form.addChild(addLabel("Length:"));
         // Length input
@@ -224,6 +226,19 @@ public class MCADEditor extends Screen {
             lengthValue = value.isEmpty() ? "0" : value);
         form.addChild(lengthInput);
 
+
+        // Reverse the direction of the plane
+        form.addChild(Button.builder(
+                Component.literal(reversed ? "Reversed: ON" : "Reversed: OFF"),
+                button -> {
+                    reversed = !reversed;
+
+                    button.setMessage(Component.literal(
+                            reversed ? "Reversed: ON" : "Reversed: OFF"
+                    ));
+                }
+        ).bounds(0, 0, contentWidth, 20).build());
+
         // Interval label
         form.addChild(addLabel("Interval:"));
         // Interval input
@@ -238,18 +253,6 @@ public class MCADEditor extends Screen {
         intervalInput.setResponder(value ->
             intervalValue = value.isEmpty() ? "0" : value);
         form.addChild(intervalInput);
-
-        // Reverse the direction of the plane
-        form.addChild(Button.builder(
-                Component.literal(reversed ? "Reversed: ON" : "Reversed: OFF"),
-                button -> {
-                    reversed = !reversed;
-
-                    button.setMessage(Component.literal(
-                            reversed ? "Reversed: ON" : "Reversed: OFF"
-                    ));
-                }
-        ).bounds(0, 0, contentWidth, 20).build());
 
 //        form.addChild(Button.builder(
 //                Component.literal("Setting A"),
@@ -298,11 +301,13 @@ public class MCADEditor extends Screen {
     private void submitForm() {
         MCADClient.execute(
                 //nameInput.getValue(),
-                sizeInput.getValue(),
                 selectedMode,
+                sizeValue,
                 selectedDirection,
-                lengthInput.getValue(),
-                reversed);
+                lengthValue,
+                reversed,
+                intervalValue
+        );
         onClose();
     }
 
