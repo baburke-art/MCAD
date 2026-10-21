@@ -179,6 +179,7 @@ public class MCADClient implements ClientModInitializer {
 
         Map<BlockPos, BlockState> blockLine = new HashMap<>();
 
+        // Add active block
         blockLine.put(pos, state);
 
         int step = reversed ? -1 : 1;
