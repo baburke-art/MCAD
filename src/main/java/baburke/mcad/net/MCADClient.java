@@ -157,7 +157,7 @@ public class MCADClient implements ClientModInitializer {
         // For each block in map
         for (Map.Entry<BlockPos, BlockState> entry : activeBlocks.entrySet()) {
             // Map of the blocks along the full length of one active block at a time
-            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(direction, length, reversed, interval, entry);
+            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(mode, direction, length, reversed, interval, entry);
 
             if (mode == Mode.EXTRUDE) {
                 ClientPlayNetworking.send(
@@ -171,18 +171,21 @@ public class MCADClient implements ClientModInitializer {
         }
     }
 
-    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Direction direction, int length, boolean reversed, int interval, Map.Entry<BlockPos, BlockState> entry) {
+    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Mode mode, Direction direction, int length, boolean reversed, int interval, Map.Entry<BlockPos, BlockState> entry) {
         BlockPos pos = entry.getKey();
         BlockState state = entry.getValue();
 
         Map<BlockPos, BlockState> blockLine = new HashMap<>();
 
+        blockLine.put(pos, state);
+
         int step = reversed ? -1 : 1;
 
-        // counting up to interval
-        int skip = 0;
+        // counting up to next interval
+        // Start at -1 so first block not counted
+        int skipCount = -1;
 
-        for (int i = 1; i < length; i++) {
+        for (int i = 0; i < length; i++) {
             int offset = i * step;
 
             BlockPos nextPos = switch (direction) {
@@ -192,12 +195,15 @@ public class MCADClient implements ClientModInitializer {
             };
 
             // Place next block each time interval is reached
-            if (skip == interval) {
+            if (interval == 0) {
                 blockLine.put(nextPos, state);
-                skip = 0;
+            } else if (skipCount == interval) {
+                blockLine.put(nextPos, state);
+                skipCount = 0;
             } else {
-                skip++;
+                skipCount++;
             }
+
         }
         return blockLine;
     }

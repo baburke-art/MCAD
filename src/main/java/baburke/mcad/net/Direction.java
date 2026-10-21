@@ -1,7 +1,5 @@
 package baburke.mcad.net;
 
-import net.minecraft.core.BlockPos;
-
 public enum Direction {
     X("X"),
     Y("Y"),

@@ -3,7 +3,12 @@ package baburke.mcad.net.network;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.HashMap;
@@ -49,8 +54,22 @@ public final class BlockNetworking {
                                 continue;
                             }
 
+                            // permission checks
                             // Check if player has person to modify each position
                             // Check whether the packet rate is reasonable to prevent spam.
+
+                            // if placing play sound
+                            if (state != Blocks.AIR.defaultBlockState()) {
+                                SoundType soundType = state.getSoundType();
+                                SoundEvent sound = soundType.getPlaceSound();
+                                level.playSound(null, pos, sound, SoundSource.BLOCKS);
+                            } else {
+                                // if destroying play break sound of current block
+                                BlockState currBlock = level.getBlockState(pos);
+
+                                SoundEvent sound = currBlock.getSoundType().getBreakSound();
+                                level.playSound(null, pos, sound, SoundSource.BLOCKS);
+                            }
 
                             // Apply the block update.
                             level.setBlock(pos, state, 3);

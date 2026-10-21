@@ -1,4 +1,8 @@
-Possible features:
+What's next?:
+
+    - Play sound for each block place or destroyed
+
+Maybe?
 
     - Visual indicator of sketch plane size
         - Custom Blue transparent block
@@ -15,6 +19,7 @@ Alpha Version 1.0
     - Boolean operations
 
         - Join (extruded sketch doesn't overwrite existing blocks)
+        - 'Match only' toggle - (only with cutting) only destroys blocks same type as active
 
 3.0
 
