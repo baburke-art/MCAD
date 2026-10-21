@@ -3,6 +3,7 @@ package baburke.mcad.net.gui;
 import baburke.mcad.net.Direction;
 import baburke.mcad.net.MCADClient;
 import baburke.mcad.net.Mode;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -12,8 +13,11 @@ import net.minecraft.client.gui.components.ScrollableLayout;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
+
+import javax.swing.*;
 
 public class MCADEditor extends Screen {
 
@@ -57,6 +61,9 @@ public class MCADEditor extends Screen {
     private EditBox intervalInput;
     private String intervalValue = "0";
 
+    // Scroll position
+    //private double savedScroll = 0.0;
+
 
     private Component modeDropdownLabel() {
         return Component.literal(selectedMode.toString()
@@ -70,6 +77,16 @@ public class MCADEditor extends Screen {
 
     public MCADEditor() {
         super(Component.literal("MCAD Editor"));
+    }
+
+    // Close editor
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (event.key() == InputConstants.KEY_J) {
+            Minecraft.getInstance().gui.setScreen(null);
+            return true;
+        }
+        return super.keyPressed(event);
     }
 
     // Editor Labels
@@ -123,7 +140,7 @@ public class MCADEditor extends Screen {
                 .spacing(6);
 
         // Name of sketch label
-        form.addChild(addLabel("Name:"));
+        //form.addChild(addLabel("Name:"));
         // Sketch name input
         nameInput = new EditBox(
                 font, 0, 0,
@@ -133,7 +150,7 @@ public class MCADEditor extends Screen {
         nameInput.setMaxLength(32);
         nameInput.setValue(nameValue);
         nameInput.setHint(Component.literal("Layer name..."));
-        form.addChild(nameInput);
+        //form.addChild(nameInput);
 
         // Mode label
         form.addChild(addLabel("Mode:"));
@@ -143,6 +160,7 @@ public class MCADEditor extends Screen {
                 button -> {
                     nameValue = nameInput.getValue();
                     modeDropdownOpen = !modeDropdownOpen;
+                    //savedScroll = scrollable.getScrollAmount();
                     rebuildWidgets();
                 }
         ).bounds(0, 0, contentWidth, 20).build();
@@ -150,10 +168,14 @@ public class MCADEditor extends Screen {
         // Only add options while the dropdown is expanded.
         if (modeDropdownOpen) {
             for (Mode mode : Mode.values()) {
+
+                // Skip the currently selected mode
+                if (mode == selectedMode) {
+                    continue;
+                }
+
                 Button option = Button.builder(
-                        Component.literal(
-                                (mode == selectedMode ? "✓ " : "") + mode
-                        ),
+                        Component.literal((mode.toString())),
                         button -> {
                             nameValue = nameInput.getValue();
                             selectedMode = mode;
@@ -188,6 +210,7 @@ public class MCADEditor extends Screen {
                 button -> {
                     nameValue = nameInput.getValue();
                     directionDropdownOpen = !directionDropdownOpen;
+                    //savedScroll = scrollable.getScrollAmount();
                     rebuildWidgets();
                 }
         ).bounds(0, 0, contentWidth, 20).build();
@@ -195,10 +218,14 @@ public class MCADEditor extends Screen {
         // Only add options while the dropdown is expanded.
         if (directionDropdownOpen) {
             for (Direction direction : Direction.values()) {
+
+                // Skip the currently selected mode
+                if (direction == selectedDirection) {
+                    continue;
+                }
+
                 Button option = Button.builder(
-                        Component.literal(
-                                (direction == selectedDirection ? "✓ " : "") + direction
-                        ),
+                        Component.literal((direction.toString())),
                         button -> {
                             nameValue = nameInput.getValue();
                             selectedDirection = direction;
@@ -277,6 +304,9 @@ public class MCADEditor extends Screen {
         scrollable.setMinWidth(contentWidth);
         scrollable.arrangeElements();
 
+        // Restore saved scroll
+
+
         // Register the scroll container with the screen.
         scrollable.visitWidgets(this::addRenderableWidget);
 
@@ -288,6 +318,9 @@ public class MCADEditor extends Screen {
         ).bounds(
                 PAD*2, footerY + PAD, contentWidth, 20
         ).build());
+
+
+
     }
 
     private FormLabel addLabel(String label) {

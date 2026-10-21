@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
@@ -52,12 +53,13 @@ public class MCADClient implements ClientModInitializer {
         // Open/Close MCAD Editor GUI
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (OPEN_FORM.consumeClick()) {
-                if (client.player != null) {
-                    if (client.gui.screen() instanceof MCADEditor) {
-                        client.gui.setScreen(null);
-                    } else {
-                        client.gui.setScreen(new MCADEditor());
-                    }
+
+                if (client.player == null) {continue;}
+
+                if (client.gui.screen() instanceof MCADEditor) {
+                    client.gui.setScreen(null); // Close
+                } else {
+                    client.gui.setScreen(new MCADEditor()); // Open
                 }
             }
         });
