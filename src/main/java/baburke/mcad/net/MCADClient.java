@@ -128,6 +128,9 @@ public class MCADClient implements ClientModInitializer {
         BlockPos playerPos = client.player.blockPosition();
         ClientLevel level = client.level;
 
+        //net.minecraft.core.Direction playerDir = client.player.getDirection();
+        //System.out.println("Player direction: " + playerDir);
+
         // try to find an origin block within max length of player
         BlockPos origin = new OriginBlock().nearestOriginBlock(level, playerPos, MAX_LENGTH);
 

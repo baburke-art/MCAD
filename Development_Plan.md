@@ -1,12 +1,15 @@
 What's next?:
 
-        - Drop down stops showing already selected option
+    - Separate extrude and cut in getNextBlocks method
+    - 
 
 Maybe?
 
     - Visual indicator of sketch plane size (hard)
         - Custom Blue transparent block
         - Show guide only while MCAD Editor is open.
+    - Rotate origin block based on player position
+        - Will need to adjust plane sizing to account for rotation.
 
 
 Alpha Version 1.0
@@ -17,17 +20,21 @@ Alpha Version 1.0
 
 2.0
 
-        - Join (extruded sketch doesn't overwrite existing blocks)
-        - 'Match only' toggle - (only with cutting) only destroys blocks same type as active
+    - Add 'depth' input for sketch plane to have multiple layers of active blocks.
+    - Join (extruded sketch doesn't overwrite existing blocks)
+    - 'Match only' toggle - (only with cutting) only destroys blocks same type as active
 
 3.0
 
-        - Rotate (0-360) extrude and cut around axis
+    - State permanence when closing editor until execute or cancel is pressed
+    - Add undo and redo
+    - Rotate (0-360) extrude and cut around axis
+    - Mirror extrude
 
 4.0
 
     - Survival Version
-        - Non-instant create/destroying of blocks
+        - Non-instant create/destroy blocks
         - Flying Golems (copper golem with wings)
             - Possible level variants (wooden golem up to diamond golem)
             - Level increases ability to mine ores like pickaxe
