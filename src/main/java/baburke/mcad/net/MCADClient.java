@@ -28,6 +28,12 @@ public class MCADClient implements ClientModInitializer {
 
     private static final int MAX_LENGTH = 200;
 
+    private static final net.minecraft.core.Direction NORTH = net.minecraft.core.Direction.NORTH;
+    private static final net.minecraft.core.Direction SOUTH = net.minecraft.core.Direction.SOUTH;
+    private static final net.minecraft.core.Direction EAST = net.minecraft.core.Direction.EAST;
+    private static final net.minecraft.core.Direction WEST = net.minecraft.core.Direction.WEST;
+
+
     // Defines Keybind category
     private static final KeyMapping.Category CATEGORY =
             KeyMapping.Category.register(
@@ -131,67 +137,6 @@ public class MCADClient implements ClientModInitializer {
 
         if (origin == null) {return;}
 
-        net.minecraft.core.Direction originFace = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
-
-        System.out.println("origin facing: " + originFace);
-
-        net.minecraft.core.Direction NORTH = net.minecraft.core.Direction.NORTH;
-        net.minecraft.core.Direction SOUTH = net.minecraft.core.Direction.SOUTH;
-        net.minecraft.core.Direction EAST = net.minecraft.core.Direction.EAST;
-        net.minecraft.core.Direction WEST = net.minecraft.core.Direction.WEST;
-
-        // Neg z = North
-        // positive z = South
-        // positive x = east
-        // negative x = west
-
-        // positive x is current code correct with origin facing west (the opposite)
-        // Just adjust the opposite facing to start.
-
-        BlockPos startBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ());
-        BlockPos endBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ());
-
-        switch (originFace) {
-            case NORTH:
-                startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
-
-                break;
-            case SOUTH:
-                startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
-
-                break;
-            case EAST:
-                startBlock = new BlockPos(origin.getX() - 1, origin.getY(), origin.getZ() - 1);
-
-                endBlock = switch (direction) {
-                    case X -> {
-                        yield startBlock.offset(0, -size + 1, -size + 1);
-                    }
-                    case Y -> {
-                        yield startBlock.offset(size - 1, 0, size - 1);
-                    }
-                    case Z -> {
-                        yield startBlock.offset(size - 1, size - 1, 0);
-                    }
-                };
-
-                // working but extrude length needs to be reversed in getNextBlocks().
-
-
-                break;
-            case WEST:
-                startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
-
-                break;
-
-
-        }
-
-
-        if (originFace.equals(EAST)) {
-            System.out.println("origin face is EAST!");
-        }
-
         // the start and end blocks of the sketch plane
 //        BlockPos startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
 //        BlockPos endBlock = switch (direction) {
@@ -209,13 +154,17 @@ public class MCADClient implements ClientModInitializer {
 
 
         // Find active blocks next to origin block
+
         Map<BlockPos, BlockState> activeBlocks =
-                new Sketch().findActiveBlocks(level, origin, size, startBlock, endBlock);
+                new Sketch().findActiveBlocks(level, origin, size, direction);
+
+        net.minecraft.core.Direction originFacing = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
+
 
         // For each block in map
         for (Map.Entry<BlockPos, BlockState> entry : activeBlocks.entrySet()) {
             // Map of the blocks along the full length of one active block at a time
-            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(mode, direction, length, reversed, interval, entry);
+            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(originFacing, mode, direction, length, reversed, interval, entry);
 
             if (mode == Mode.EXTRUDE) {
                 ClientPlayNetworking.send(
@@ -229,7 +178,7 @@ public class MCADClient implements ClientModInitializer {
         }
     }
 
-    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Mode mode, Direction direction, int length, boolean reversed, int interval, Map.Entry<BlockPos, BlockState> entry) {
+    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(net.minecraft.core.Direction originFacing, Mode mode, Direction direction, int length, boolean reversed, int interval, Map.Entry<BlockPos, BlockState> entry) {
         BlockPos pos = entry.getKey();
         BlockState state = entry.getValue();
 
@@ -237,6 +186,9 @@ public class MCADClient implements ClientModInitializer {
 
         // Add active block
         blockLine.put(pos, state);
+
+        // next line in block
+        BlockPos nextPos = new BlockPos(pos.getX(), pos.getY(), pos.getZ());
 
         int step = reversed ? -1 : 1;
 
@@ -247,10 +199,35 @@ public class MCADClient implements ClientModInitializer {
         for (int i = 0; i < length; i++) {
             int offset = i * step;
 
-            BlockPos nextPos = switch (direction) {
-                case X -> pos.offset(offset, 0, 0);
-                case Y -> pos.offset(0, offset, 0);
-                case Z -> pos.offset(0, 0, offset);
+            switch (direction) {
+                case X:
+                    // Origin block's X texture is facing
+                    if (originFacing == NORTH) {
+                        nextPos = pos.offset(0, 0, offset);
+                    } else if (originFacing == SOUTH) {
+                        nextPos = pos.offset(0, 0, -offset);
+                    } else if (originFacing == EAST) {
+                        nextPos = pos.offset(-offset, 0, 0);
+                    } else if (originFacing == WEST) {
+                        nextPos = pos.offset(offset, 0, 0);
+                    }
+
+                    break;
+                case Y:
+                    nextPos = pos.offset(0, offset, 0);
+                    break;
+                case Z:
+                     // Origin block's X texture is facing
+                    if (originFacing == NORTH) {
+                        nextPos = pos.offset(-offset, 0, 0);
+                    } else if (originFacing == SOUTH) {
+                        nextPos = pos.offset( offset, 0,0);
+                    } else if (originFacing == EAST) {
+                        nextPos = pos.offset(0, 0, -offset);
+                    } else if (originFacing == WEST) {
+                        nextPos = pos.offset(0, 0, offset);
+                    }
+                    break;
             };
 
             // Place next block each time interval is reached
