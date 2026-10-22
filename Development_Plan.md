@@ -1,15 +1,14 @@
 What's next?:
 
     - Separate extrude and cut in getNextBlocks method
-    - 
+    - Rotate origin block based on player position
+    - Rename Direction class, it clashes with official class.
 
 Maybe?
 
     - Visual indicator of sketch plane size (hard)
         - Custom Blue transparent block
         - Show guide only while MCAD Editor is open.
-    - Rotate origin block based on player position
-        - Will need to adjust plane sizing to account for rotation.
 
 
 Alpha Version 1.0

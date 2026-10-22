@@ -1,7 +1,10 @@
 package baburke.mcad.net.feature;
 
+import baburke.mcad.net.network.UpdateBlocks;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.HashMap;
@@ -35,11 +38,11 @@ public class Sketch {
             // For Visual Guide
             // update when size or direction changes.
             // if pos.state == Blocks.Air skip it
-//            for (int i = 0; i < size; i++) {
-//                ClientPlayNetworking.send(
-//                        new UpdateBlock(pos.immutable(), Blocks.STONE.defaultBlockState())
-//                );
-//            }
+            for (int i = 0; i < size; i++) {
+                ClientPlayNetworking.send(
+                        UpdateBlocks.place(pos.immutable(), Blocks.STONE.defaultBlockState())
+                );
+            }
 
         }
 

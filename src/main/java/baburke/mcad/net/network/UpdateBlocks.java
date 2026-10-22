@@ -30,6 +30,12 @@ public record UpdateBlocks(Map<BlockPos, BlockState> blocks)
                     UpdateBlocks::new
             );
 
+    public static UpdateBlocks place(BlockPos pos, BlockState state) {
+        Map<BlockPos, BlockState> blocks = new HashMap<>();
+        blocks.put(pos, state);
+        return new UpdateBlocks(blocks);
+    }
+
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;

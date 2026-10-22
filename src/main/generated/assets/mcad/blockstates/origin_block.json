@@ -1,6 +1,18 @@
 {
   "variants": {
-    "": {
+    "facing=north": {
+      "model": "mcad:block/origin_block",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "mcad:block/origin_block",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "mcad:block/origin_block",
+      "y": 180
+    },
+    "facing=west": {
       "model": "mcad:block/origin_block"
     }
   }

@@ -1,7 +1,7 @@
 package baburke.mcad.net;
 
 import baburke.mcad.net.feature.Sketch;
-import baburke.mcad.net.feature.OriginBlock;
+import baburke.mcad.net.block.OriginBlock;
 import baburke.mcad.net.gui.MCADEditor;
 
 import baburke.mcad.net.network.UpdateBlocks;
@@ -14,13 +14,11 @@ import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
@@ -128,32 +126,87 @@ public class MCADClient implements ClientModInitializer {
         BlockPos playerPos = client.player.blockPosition();
         ClientLevel level = client.level;
 
-        //net.minecraft.core.Direction playerDir = client.player.getDirection();
-        //System.out.println("Player direction: " + playerDir);
-
         // try to find an origin block within max length of player
-        BlockPos origin = new OriginBlock().nearestOriginBlock(level, playerPos, MAX_LENGTH);
+        BlockPos origin = OriginBlock.nearestOriginBlock(level, playerPos, MAX_LENGTH);
 
-        if (origin == null) {
-            System.out.println("Origin Block not found!");
-            return;
+        if (origin == null) {return;}
+
+        net.minecraft.core.Direction originFace = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
+
+        System.out.println("origin facing: " + originFace);
+
+        net.minecraft.core.Direction NORTH = net.minecraft.core.Direction.NORTH;
+        net.minecraft.core.Direction SOUTH = net.minecraft.core.Direction.SOUTH;
+        net.minecraft.core.Direction EAST = net.minecraft.core.Direction.EAST;
+        net.minecraft.core.Direction WEST = net.minecraft.core.Direction.WEST;
+
+        // Neg z = North
+        // positive z = South
+        // positive x = east
+        // negative x = west
+
+        // positive x is current code correct with origin facing west (the opposite)
+        // Just adjust the opposite facing to start.
+
+        BlockPos startBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ());
+        BlockPos endBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ());
+
+        switch (originFace) {
+            case NORTH:
+                startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
+
+                break;
+            case SOUTH:
+                startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
+
+                break;
+            case EAST:
+                startBlock = new BlockPos(origin.getX() - 1, origin.getY(), origin.getZ() - 1);
+
+                endBlock = switch (direction) {
+                    case X -> {
+                        yield startBlock.offset(0, -size + 1, -size + 1);
+                    }
+                    case Y -> {
+                        yield startBlock.offset(size - 1, 0, size - 1);
+                    }
+                    case Z -> {
+                        yield startBlock.offset(size - 1, size - 1, 0);
+                    }
+                };
+
+                // working but extrude length needs to be reversed in getNextBlocks().
+
+
+                break;
+            case WEST:
+                startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
+
+                break;
+
+
         }
 
-        // If a nearby origin block is found
-        System.out.println("Origin Block found!: " + origin);
+
+        if (originFace.equals(EAST)) {
+            System.out.println("origin face is EAST!");
+        }
+
         // the start and end blocks of the sketch plane
-        BlockPos startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
-        BlockPos endBlock = switch (direction) {
-            case X -> {
-                yield startBlock.offset(0, size - 1, size - 1);
-            }
-            case Y -> {
-                yield startBlock.offset(size - 1, 0, size - 1);
-            }
-            case Z -> {
-                yield startBlock.offset(size - 1, size - 1, 0);
-            }
-        };
+//        BlockPos startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
+//        BlockPos endBlock = switch (direction) {
+//            case X -> {
+//                yield startBlock.offset(0, size - 1, size - 1);
+//            }
+//            case Y -> {
+//                yield startBlock.offset(size - 1, 0, size - 1);
+//            }
+//            case Z -> {
+//                yield startBlock.offset(size - 1, size - 1, 0);
+//            }
+//        };
+
+
 
         // Find active blocks next to origin block
         Map<BlockPos, BlockState> activeBlocks =

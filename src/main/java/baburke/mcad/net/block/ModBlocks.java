@@ -20,9 +20,9 @@ public class ModBlocks {
 
     public static final Block ORIGIN_BLOCK =  registerBlock(
             "origin_block",
-            properties -> new Block(
+            properties -> new OriginBlock(
                     properties
-                            .strength(0.5F)
+                            .strength(0.0F)
                             .sound(SoundType.TRIAL_SPAWNER)
                             .lightLevel(state -> 15)
                             .noOcclusion()
