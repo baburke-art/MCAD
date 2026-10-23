@@ -1,9 +1,6 @@
 What's next?:
 
-    - Separate extrude and cut in getNextBlocks method
-    - Rotate origin block based on player position
-    - Rename Direction class, it clashes with official class.
-    - maybe change textures to A, B, C along with enums etc.
+    - 
 
 Maybe?
 

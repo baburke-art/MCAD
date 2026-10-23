@@ -29,12 +29,6 @@ public class MCADClient implements ClientModInitializer {
 
     private static final int MAX_LENGTH = 200;
 
-    private static final net.minecraft.core.Direction NORTH = net.minecraft.core.Direction.NORTH;
-    private static final net.minecraft.core.Direction SOUTH = net.minecraft.core.Direction.SOUTH;
-    private static final net.minecraft.core.Direction EAST = net.minecraft.core.Direction.EAST;
-    private static final net.minecraft.core.Direction WEST = net.minecraft.core.Direction.WEST;
-
-
     // Defines Keybind category
     private static final KeyMapping.Category CATEGORY =
             KeyMapping.Category.register(
@@ -44,10 +38,11 @@ public class MCADClient implements ClientModInitializer {
             );
 
     // Adds MCAD Editor keybind (Default "J")
-    private static final KeyMapping OPEN_FORM =
+    public static final KeyMapping OPEN_FORM =
             KeyMappingHelper.registerKeyMapping(
                     new KeyMapping(
-                            "Open/Close Editor",
+                            "key.mcad.open_form",
+                            InputConstants.Type.KEYBOARD,
                             InputConstants.KEY_J,
                             CATEGORY
                     )
@@ -184,9 +179,9 @@ public class MCADClient implements ClientModInitializer {
 
             switch (planeDirection) {
                 // From current active block's position using local coordinates
-                case X -> nextPos = Sketch.localOffset(pos, originFacing, 0, 0, offset);
-                case Y -> nextPos = Sketch.localOffset(pos, originFacing, 0, offset, 0);
-                case Z -> nextPos = Sketch.localOffset(pos, originFacing, -offset, 0, 0);
+                case A -> nextPos = Sketch.localOffset(pos, originFacing, 0, 0, offset);
+                case C -> nextPos = Sketch.localOffset(pos, originFacing, 0, offset, 0);
+                case B -> nextPos = Sketch.localOffset(pos, originFacing, -offset, 0, 0);
             };
 
             // Place next block each time interval is reached

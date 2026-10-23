@@ -23,7 +23,7 @@ public class ModBlocks {
             properties -> new OriginBlock(
                     properties
                             .strength(0.0F)
-                            .sound(SoundType.TRIAL_SPAWNER)
+                            .sound(SoundType.BONE_BLOCK)
                             .lightLevel(state -> 15)
                             .noOcclusion()
             )

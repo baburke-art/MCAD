@@ -72,7 +72,7 @@ public final class BlockNetworking {
                             }
 
                             // Remove current block then place it again.
-                            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+                            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
 
                             // Apply the block update.
                             level.setBlock(pos, state, 3);

@@ -17,6 +17,8 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
 
+import static baburke.mcad.net.MCADClient.OPEN_FORM;
+
 public class MCADEditor extends Screen {
 
     private static final int PANEL_WIDTH = 100;
@@ -45,7 +47,7 @@ public class MCADEditor extends Screen {
     private String sizeValue = "0";
 
     // Direction of plane
-    private PlaneDirection selectedPlaneDirection = PlaneDirection.X;
+    private PlaneDirection selectedPlaneDirection = PlaneDirection.A;
     private boolean directionDropdownOpen = false;
 
     // Length input
@@ -80,7 +82,7 @@ public class MCADEditor extends Screen {
     // Close editor
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (event.key() == InputConstants.KEY_J) {
+        if (OPEN_FORM.matches(event)) {
             Minecraft.getInstance().gui.setScreen(null);
             return true;
         }

@@ -1,9 +1,9 @@
 package baburke.mcad.net;
 
 public enum PlaneDirection {
-    X("X"),
-    Y("Y"),
-    Z("Z");
+    A("A"),
+    C("C"),
+    B("B");
 
     private final String displayName;
 

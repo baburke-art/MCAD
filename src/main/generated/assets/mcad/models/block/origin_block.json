@@ -1,13 +1,13 @@
 {
   "parent": "minecraft:block/cube",
   "textures": {
-    "north": "mcad:block/z",
-    "south": "mcad:block/neg-z",
-    "east": "mcad:block/neg-x",
-    "west": "mcad:block/x",
-    "up": "mcad:block/y",
-    "down": "mcad:block/neg-y",
-    "particle": "mcad:block/y"
+    "north": "mcad:block/b",
+    "south": "mcad:block/blue",
+    "east": "mcad:block/red",
+    "west": "mcad:block/a",
+    "up": "mcad:block/c",
+    "down": "mcad:block/green",
+    "particle": "mcad:block/c"
   },
   "elements": [
     {
@@ -18,7 +18,7 @@
         "south": {"texture": "#south"},
         "east": {"texture": "#east"},
         "west": {"texture": "#west"},
-        "up": {"texture": "#up", "rotation": 180},
+        "up": {"texture": "#up", "rotation": 90},
         "down": {"texture": "#down"}
       }
     }

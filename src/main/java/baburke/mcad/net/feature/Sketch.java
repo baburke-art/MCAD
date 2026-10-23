@@ -28,18 +28,13 @@ public class Sketch {
 
         Direction originFace = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
 
+        // Local coordinate of starting block next to origin
         BlockPos startBlock = localOffset(origin, originFace, -1, 0, 1);
 
         BlockPos endBlock = switch (planeDirection) {
-            case X -> {
-                yield localOffset(origin, originFace, -size, size - 1, 1);
-            }
-            case Y -> {
-                yield localOffset(origin, originFace, -size, 0, size);
-            }
-            case Z -> {
-                yield localOffset(origin, originFace, -1, size - 1, size);
-            }
+            case A -> localOffset(origin, originFace, -size, size - 1, 1);
+            case C -> localOffset(origin, originFace, -size, 0, size);
+            case B -> localOffset(origin, originFace, -1, size - 1, size);
         };
 
         // Neg z = North
@@ -58,7 +53,7 @@ public class Sketch {
                 blocks.put(pos.immutable(), state);
             }
 
-            // For Visual Guide
+            // For Visual Guide of plane
             // update when size or direction changes.
             // if pos.state == Blocks.Air skip it
 //            for (int i = 0; i < size; i++) {
