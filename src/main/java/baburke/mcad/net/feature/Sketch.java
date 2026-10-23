@@ -1,10 +1,11 @@
 package baburke.mcad.net.feature;
 
-import baburke.mcad.net.Direction;
+import baburke.mcad.net.PlaneDirection;
 import baburke.mcad.net.network.UpdateBlocks;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -20,119 +21,36 @@ public class Sketch {
             ClientLevel level,
             BlockPos origin,
             int size,
-            Direction direction
+            PlaneDirection planeDirection
     ) {
 
         Map<BlockPos, BlockState> blocks = new HashMap<>();
 
-        BlockPos startBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ());
-        BlockPos endBlock = new BlockPos(origin.getX(), origin.getY(), origin.getZ());
+        Direction originFace = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
 
+        BlockPos startBlock = localOffset(origin, originFace, -1, 0, 1);
 
-
-        net.minecraft.core.Direction originFace = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
-
-        System.out.println("origin facing: " + originFace);
-
-        net.minecraft.core.Direction NORTH = net.minecraft.core.Direction.NORTH;
-        net.minecraft.core.Direction SOUTH = net.minecraft.core.Direction.SOUTH;
-        net.minecraft.core.Direction EAST = net.minecraft.core.Direction.EAST;
-        net.minecraft.core.Direction WEST = net.minecraft.core.Direction.WEST;
+        BlockPos endBlock = switch (planeDirection) {
+            case X -> {
+                yield localOffset(origin, originFace, -size, size - 1, 1);
+            }
+            case Y -> {
+                yield localOffset(origin, originFace, -size, 0, size);
+            }
+            case Z -> {
+                yield localOffset(origin, originFace, -1, size - 1, size);
+            }
+        };
 
         // Neg z = North
         // positive z = South
         // positive x = east
         // negative x = west
 
-        // positive x is current code correct with origin facing west (the opposite)
-        // Just adjust the opposite facing to start.
-
-
-        switch (originFace) {
-            case NORTH:
-                startBlock = new BlockPos(origin.getX() - 1, origin.getY(), origin.getZ() + 1);
-
-                endBlock = switch (direction) {
-                    case X -> {
-                        yield startBlock.offset(-size + 1, size - 1, 0);
-                    }
-                    case Y -> {
-                        yield startBlock.offset(-size + 1, 0, size - 1);
-                    }
-                    case Z -> {
-                        yield startBlock.offset(0, size - 1, size - 1);
-                    }
-                };
-
-                break;
-            case SOUTH:
-                startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() - 1);
-
-                endBlock = switch (direction) {
-                    case X -> {
-                        yield startBlock.offset(size - 1, size - 1, 0);
-                    }
-                    case Y -> {
-                        yield startBlock.offset(size - 1, 0, -size + 1);
-                    }
-                    case Z -> {
-                        yield startBlock.offset(0, size - 1, -size + 1);
-                    }
-                };
-
-                break;
-            case EAST:
-                startBlock = new BlockPos(origin.getX() - 1, origin.getY(), origin.getZ() - 1);
-
-                endBlock = switch (direction) {
-                    case X -> {
-                        yield startBlock.offset(0, size - 1, -size + 1);
-                    }
-                    case Y -> {
-                        yield startBlock.offset(-size + 1, 0, -size + 1);
-                    }
-                    case Z -> {
-                        yield startBlock.offset(-size + 1, size - 1, 0);
-                    }
-                };
-
-                // Origin facing East is working but extrude length needs to be reversed in getNextBlocks().
-
-
-                break;
-            case WEST:
-                startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
-
-                endBlock = switch (direction) {
-                    case X -> {
-                        yield startBlock.offset(0, size - 1, size - 1);
-                    }
-                    case Y -> {
-                        yield startBlock.offset(size - 1, 0, size - 1);
-                    }
-                    case Z -> {
-                        yield startBlock.offset(size - 1, size - 1, 0);
-                    }
-                };
-
-                break;
-
-
-        }
-
-        //BlockPos testPos = startBlock.offset(0, -size + 1, -size + 1);
-
-        //System.out.println("test pos: " + testPos);
-
-//        ClientPlayNetworking.send(
-//                UpdateBlocks.place(startBlock.offset(0, -size + 1, -size + 1).immutable(), Blocks.BAMBOO_PLANKS.defaultBlockState())
-//        );
-
         for (BlockPos pos : BlockPos.betweenClosed(
                 startBlock,
                 endBlock
         )) {
-
             BlockState state = level.getBlockState(pos);
 
             // If not air
@@ -143,16 +61,28 @@ public class Sketch {
             // For Visual Guide
             // update when size or direction changes.
             // if pos.state == Blocks.Air skip it
-            for (int i = 0; i < size; i++) {
-                ClientPlayNetworking.send(
-                        UpdateBlocks.place(pos.immutable(), Blocks.STONE.defaultBlockState())
-                );
-            }
-
-
+//            for (int i = 0; i < size; i++) {
+//                ClientPlayNetworking.send(
+//                        UpdateBlocks.place(pos.immutable(), Blocks.STONE.defaultBlockState())
+//                );
+//            }
         }
-
         return blocks;
+    }
+
+    public static BlockPos localOffset(
+            BlockPos origin,
+            Direction facing,
+            int x, int y, int z
+    ) {
+        Direction right = facing.getClockWise();
+        Direction up = Direction.UP;
+        Direction backward = facing.getOpposite();
+
+        return origin
+                .relative(right, x)
+                .relative(up, y)
+                .relative(backward, z);
     }
 
 }

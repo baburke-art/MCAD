@@ -16,6 +16,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -73,7 +74,7 @@ public class MCADClient implements ClientModInitializer {
             //String name,
             Mode mode,
             String sizeInput,
-            Direction direction,
+            PlaneDirection planeDirection,
             String lengthInput,
             boolean reversed,
             String intervalInput
@@ -123,7 +124,7 @@ public class MCADClient implements ClientModInitializer {
         //System.out.println("Name: " + name);
         System.out.println("Mode: " + mode);
         System.out.println("Size: " + size);
-        System.out.println("Direction: " + direction);
+        System.out.println("Direction: " + planeDirection);
         System.out.println("length: " + length);
         System.out.println("Reversed: " + reversed);
         System.out.println("Interval: " + interval);
@@ -137,34 +138,16 @@ public class MCADClient implements ClientModInitializer {
 
         if (origin == null) {return;}
 
-        // the start and end blocks of the sketch plane
-//        BlockPos startBlock = new BlockPos(origin.getX() + 1, origin.getY(), origin.getZ() + 1);
-//        BlockPos endBlock = switch (direction) {
-//            case X -> {
-//                yield startBlock.offset(0, size - 1, size - 1);
-//            }
-//            case Y -> {
-//                yield startBlock.offset(size - 1, 0, size - 1);
-//            }
-//            case Z -> {
-//                yield startBlock.offset(size - 1, size - 1, 0);
-//            }
-//        };
-
-
-
         // Find active blocks next to origin block
-
         Map<BlockPos, BlockState> activeBlocks =
-                new Sketch().findActiveBlocks(level, origin, size, direction);
+                new Sketch().findActiveBlocks(level, origin, size, planeDirection);
 
-        net.minecraft.core.Direction originFacing = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
-
+        Direction originFacing = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
 
         // For each block in map
         for (Map.Entry<BlockPos, BlockState> entry : activeBlocks.entrySet()) {
             // Map of the blocks along the full length of one active block at a time
-            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(originFacing, mode, direction, length, reversed, interval, entry);
+            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(origin, originFacing, mode, planeDirection, length, reversed, interval, entry);
 
             if (mode == Mode.EXTRUDE) {
                 ClientPlayNetworking.send(
@@ -178,7 +161,7 @@ public class MCADClient implements ClientModInitializer {
         }
     }
 
-    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(net.minecraft.core.Direction originFacing, Mode mode, Direction direction, int length, boolean reversed, int interval, Map.Entry<BlockPos, BlockState> entry) {
+    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(BlockPos origin, Direction originFacing, Mode mode, PlaneDirection planeDirection, int length, boolean reversed, int interval, Map.Entry<BlockPos, BlockState> entry) {
         BlockPos pos = entry.getKey();
         BlockState state = entry.getValue();
 
@@ -193,41 +176,17 @@ public class MCADClient implements ClientModInitializer {
         int step = reversed ? -1 : 1;
 
         // counting up to next interval
-        // Start at -1 so first block not counted
+        // Start at -1 so active block not counted
         int skipCount = -1;
 
         for (int i = 0; i < length; i++) {
             int offset = i * step;
 
-            switch (direction) {
-                case X:
-                    // Origin block's X texture is facing
-                    if (originFacing == NORTH) {
-                        nextPos = pos.offset(0, 0, offset);
-                    } else if (originFacing == SOUTH) {
-                        nextPos = pos.offset(0, 0, -offset);
-                    } else if (originFacing == EAST) {
-                        nextPos = pos.offset(-offset, 0, 0);
-                    } else if (originFacing == WEST) {
-                        nextPos = pos.offset(offset, 0, 0);
-                    }
-
-                    break;
-                case Y:
-                    nextPos = pos.offset(0, offset, 0);
-                    break;
-                case Z:
-                     // Origin block's X texture is facing
-                    if (originFacing == NORTH) {
-                        nextPos = pos.offset(-offset, 0, 0);
-                    } else if (originFacing == SOUTH) {
-                        nextPos = pos.offset( offset, 0,0);
-                    } else if (originFacing == EAST) {
-                        nextPos = pos.offset(0, 0, -offset);
-                    } else if (originFacing == WEST) {
-                        nextPos = pos.offset(0, 0, offset);
-                    }
-                    break;
+            switch (planeDirection) {
+                // From current active block's position using local coordinates
+                case X -> nextPos = Sketch.localOffset(pos, originFacing, 0, 0, offset);
+                case Y -> nextPos = Sketch.localOffset(pos, originFacing, 0, offset, 0);
+                case Z -> nextPos = Sketch.localOffset(pos, originFacing, -offset, 0, 0);
             };
 
             // Place next block each time interval is reached

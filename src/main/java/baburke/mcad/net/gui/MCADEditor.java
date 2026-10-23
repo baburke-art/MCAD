@@ -1,6 +1,6 @@
 package baburke.mcad.net.gui;
 
-import baburke.mcad.net.Direction;
+import baburke.mcad.net.PlaneDirection;
 import baburke.mcad.net.MCADClient;
 import baburke.mcad.net.Mode;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -16,8 +16,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
-
-import javax.swing.*;
 
 public class MCADEditor extends Screen {
 
@@ -47,7 +45,7 @@ public class MCADEditor extends Screen {
     private String sizeValue = "0";
 
     // Direction of plane
-    private Direction selectedDirection = Direction.X;
+    private PlaneDirection selectedPlaneDirection = PlaneDirection.X;
     private boolean directionDropdownOpen = false;
 
     // Length input
@@ -71,7 +69,7 @@ public class MCADEditor extends Screen {
     }
 
     private Component directionDropdownLabel() {
-        return Component.literal(selectedDirection.toString()
+        return Component.literal(selectedPlaneDirection.toString()
                 + (directionDropdownOpen ? "  ▲" : "  ▼"));
     }
 
@@ -217,18 +215,18 @@ public class MCADEditor extends Screen {
         form.addChild(directionDropdownButton);
         // Only add options while the dropdown is expanded.
         if (directionDropdownOpen) {
-            for (Direction direction : Direction.values()) {
+            for (PlaneDirection planeDirection : PlaneDirection.values()) {
 
                 // Skip the currently selected mode
-                if (direction == selectedDirection) {
+                if (planeDirection == selectedPlaneDirection) {
                     continue;
                 }
 
                 Button option = Button.builder(
-                        Component.literal((direction.toString())),
+                        Component.literal((planeDirection.toString())),
                         button -> {
                             nameValue = nameInput.getValue();
-                            selectedDirection = direction;
+                            selectedPlaneDirection = planeDirection;
                             directionDropdownOpen = false;
                             rebuildWidgets();
                         }
@@ -336,7 +334,7 @@ public class MCADEditor extends Screen {
                 //nameInput.getValue(),
                 selectedMode,
                 sizeValue,
-                selectedDirection,
+                selectedPlaneDirection,
                 lengthValue,
                 reversed,
                 intervalValue
