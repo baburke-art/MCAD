@@ -18,6 +18,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.jspecify.annotations.NonNull;
@@ -142,9 +143,9 @@ public class MCADClient implements ClientModInitializer {
         // For each block in map
         for (Map.Entry<BlockPos, BlockState> entry : activeBlocks.entrySet()) {
             // Map of the blocks along the full length of one active block at a time
-            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(origin, originFacing, mode, planeDirection, length, reversed, interval, entry);
+            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(level, origin, originFacing, mode, planeDirection, length, reversed, interval, entry);
 
-            if (mode == Mode.EXTRUDE) {
+            if (mode == Mode.EXTRUDE || mode == Mode.JOIN) {
                 ClientPlayNetworking.send(
                         UpdateBlocks.place(nextBlocks)
                 );
@@ -156,7 +157,7 @@ public class MCADClient implements ClientModInitializer {
         }
     }
 
-    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(BlockPos origin, Direction originFacing, Mode mode, PlaneDirection planeDirection, int length, boolean reversed, int interval, Map.Entry<BlockPos, BlockState> entry) {
+    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Level level, BlockPos origin, Direction originFacing, Mode mode, PlaneDirection planeDirection, int length, boolean reversed, int interval, Map.Entry<BlockPos, BlockState> entry) {
         BlockPos pos = entry.getKey();
         BlockState state = entry.getValue();
 
@@ -184,6 +185,11 @@ public class MCADClient implements ClientModInitializer {
                 case B -> nextPos = Sketch.localOffset(pos, originFacing, -offset, 0, 0);
             };
 
+            // Not counting the active block, If next block is not air and mode is join, end line and return it.
+            if (i > 0 && !level.getBlockState(nextPos).isAir() && mode == Mode.JOIN) {
+                return blockLine;
+            }
+
             // Place next block each time interval is reached
             if (interval == 0) {
                 blockLine.put(nextPos, state);
@@ -196,6 +202,21 @@ public class MCADClient implements ClientModInitializer {
 
         }
         return blockLine;
+    }
+
+    private Map<BlockPos, BlockState> joinBlocks(Map<BlockPos, BlockState> blocks) {
+        Map<BlockPos, BlockState> newBlocks = new HashMap<>();
+
+        for (Map.Entry<BlockPos, BlockState> entry : blocks.entrySet()) {
+            BlockPos pos = entry.getKey();
+            BlockState state = entry.getValue();
+
+        }
+
+
+
+
+        return newBlocks;
     }
 
 

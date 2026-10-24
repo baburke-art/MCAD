@@ -2,8 +2,8 @@
   "parent": "minecraft:block/cube",
   "textures": {
     "north": "mcad:block/b",
-    "south": "mcad:block/blue",
-    "east": "mcad:block/red",
+    "south": "mcad:block/red",
+    "east": "mcad:block/blue",
     "west": "mcad:block/a",
     "up": "mcad:block/c",
     "down": "mcad:block/green",

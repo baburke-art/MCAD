@@ -2,6 +2,7 @@ package baburke.mcad.net;
 
 public enum Mode {
     EXTRUDE("Extrude"),
+    JOIN("Join"),
     CUT("Cut");
 
     private final String displayName;

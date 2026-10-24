@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 // Maps active blocks in a rectangle next to the origin block.
@@ -24,7 +25,7 @@ public class Sketch {
             PlaneDirection planeDirection
     ) {
 
-        Map<BlockPos, BlockState> blocks = new HashMap<>();
+        Map<BlockPos, BlockState> blocks = new LinkedHashMap<>();
 
         Direction originFace = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
 
@@ -66,7 +67,7 @@ public class Sketch {
     }
 
     public static BlockPos localOffset(
-            BlockPos origin,
+            BlockPos pos,
             Direction facing,
             int x, int y, int z
     ) {
@@ -74,7 +75,7 @@ public class Sketch {
         Direction up = Direction.UP;
         Direction backward = facing.getOpposite();
 
-        return origin
+        return pos
                 .relative(right, x)
                 .relative(up, y)
                 .relative(backward, z);

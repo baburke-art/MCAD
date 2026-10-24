@@ -71,8 +71,10 @@ public final class BlockNetworking {
                                 level.playSound(null, pos, sound, SoundSource.BLOCKS);
                             }
 
-                            // Remove current block then place it again.
+                            // Remove current block first
                             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+
+                            //System.out.println(pos  + " , " + state);
 
                             // Apply the block update.
                             level.setBlock(pos, state, 3);
