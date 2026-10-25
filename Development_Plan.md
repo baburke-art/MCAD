@@ -1,6 +1,6 @@
 What's next?:
 
-    - 
+    - Match Cut
 
 Maybe?
 
@@ -12,7 +12,7 @@ Maybe?
 Alpha Version 1.0
 
     - Extrude and Join
-    - Cut and Matchcut
+    - Cut and Match-Cut
     - Reverse
     - Interval (repeat pattern)
 

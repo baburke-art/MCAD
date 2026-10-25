@@ -149,7 +149,7 @@ public class MCADClient implements ClientModInitializer {
                 ClientPlayNetworking.send(
                         UpdateBlocks.place(nextBlocks)
                 );
-            } else if (mode == Mode.CUT) {
+            } else if (mode == Mode.CUT || mode == Mode.MATCHCUT) {
                 ClientPlayNetworking.send(
                         UpdateBlocks.destroy(nextBlocks.keySet())
                 );
@@ -178,6 +178,8 @@ public class MCADClient implements ClientModInitializer {
         for (int i = 0; i < length; i++) {
             int offset = i * step;
 
+            BlockState currState = level.getBlockState(pos);
+
             switch (planeDirection) {
                 // From current active block's position using local coordinates
                 case A -> nextPos = Sketch.localOffset(pos, originFacing, 0, 0, offset);
@@ -186,9 +188,10 @@ public class MCADClient implements ClientModInitializer {
             };
 
             // Not counting the active block, If next block is not air and mode is join, end line and return it.
-            if (i > 0 && !level.getBlockState(nextPos).isAir() && mode == Mode.JOIN) {
-                return blockLine;
-            }
+            if (i > 0 && !level.getBlockState(nextPos).isAir() && mode == Mode.JOIN) {return blockLine;}
+
+            // If current block is not same type as next block skip it
+            if (level.getBlockState(nextPos) != currState) {continue;}
 
             // Place next block each time interval is reached
             if (interval == 0) {
@@ -212,9 +215,6 @@ public class MCADClient implements ClientModInitializer {
             BlockState state = entry.getValue();
 
         }
-
-
-
 
         return newBlocks;
     }

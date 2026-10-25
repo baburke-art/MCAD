@@ -3,7 +3,8 @@ package baburke.mcad.net;
 public enum Mode {
     EXTRUDE("Extrude"),
     JOIN("Join"),
-    CUT("Cut");
+    CUT("Cut"),
+    MATCHCUT("Match-Cut");
 
     private final String displayName;
 
