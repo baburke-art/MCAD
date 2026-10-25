@@ -9,8 +9,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -57,9 +55,18 @@ public class Sketch {
             // For Visual Guide of plane
             // update when size or direction changes.
             // if pos.state == Blocks.Air skip it
+
+//            BlockState plane_Colour;
+//
+//            plane_Colour = switch (planeDirection) {
+//                case A -> plane_Colour = Blocks.STAINED_GLASS.red().defaultBlockState();
+//                case B -> plane_Colour = Blocks.STAINED_GLASS.blue().defaultBlockState();
+//                case C -> plane_Colour = Blocks.STAINED_GLASS.lime().defaultBlockState();
+//            };
+//
 //            for (int i = 0; i < size; i++) {
 //                ClientPlayNetworking.send(
-//                        UpdateBlocks.place(pos.immutable(), Blocks.STONE.defaultBlockState())
+//                        UpdateBlocks.place(pos.immutable(), plane_Colour)
 //                );
 //            }
         }

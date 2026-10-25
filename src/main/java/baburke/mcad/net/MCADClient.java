@@ -132,6 +132,11 @@ public class MCADClient implements ClientModInitializer {
         // try to find an origin block within max length of player
         BlockPos origin = OriginBlock.nearestOriginBlock(level, playerPos, MAX_LENGTH);
 
+
+        BlockPos test = new BlockPos(0, -60, 0);
+
+        System.out.println("Test block: " + level.getBlockState(test).getBlock());
+
         if (origin == null) {return;}
 
         // Find active blocks next to origin block
@@ -191,7 +196,7 @@ public class MCADClient implements ClientModInitializer {
             if (i > 0 && !level.getBlockState(nextPos).isAir() && mode == Mode.JOIN) {return blockLine;}
 
             // If current block is not same type as next block skip it
-            if (level.getBlockState(nextPos) != currState) {continue;}
+            if (level.getBlockState(nextPos) != currState && mode == Mode.MATCHCUT) {continue;}
 
             // Place next block each time interval is reached
             if (interval == 0) {
