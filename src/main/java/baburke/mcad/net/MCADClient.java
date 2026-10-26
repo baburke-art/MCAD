@@ -134,32 +134,54 @@ public class MCADClient implements ClientModInitializer {
 
         if (origin == null) {return;}
 
-        // Find active blocks next to origin block
-        Map<BlockPos, BlockState> activeBlocks =
-                new Sketch().findActiveBlocks(level, origin, size, planeDirection);
-
         Direction originFacing = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
 
+        if (mode == Mode.FASTCUT) {
+            // Find all blocks next to origin block
+            Map<BlockPos, BlockState> allBlocks = new Sketch().getAllBlocks(level, origin, size, planeDirection);
+
+            for (Map.Entry<BlockPos, BlockState> block : allBlocks.entrySet()) {
+                Map<BlockPos, BlockState> blockLine = getNextBlocks(level, origin, originFacing, mode, planeDirection, length, reversed, interval, block);
+
+                ClientPlayNetworking.send(
+                        UpdateBlocks.destroy(blockLine.keySet())
+                );
+            }
+            return;
+        }
+
+        // Find active blocks next to origin block
+        Map<BlockPos, BlockState> activeBlocks = new Sketch().findActiveBlocks(level, origin, size, planeDirection);
+
         // For each block in map
-        for (Map.Entry<BlockPos, BlockState> entry : activeBlocks.entrySet()) {
+        for (Map.Entry<BlockPos, BlockState> block : activeBlocks.entrySet()) {
+
             // Map of the blocks along the full length of one active block at a time
-            Map<BlockPos, BlockState> nextBlocks = getNextBlocks(level, origin, originFacing, mode, planeDirection, length, reversed, interval, entry);
+            Map<BlockPos, BlockState> blockLine = getNextBlocks(level, origin, originFacing, mode, planeDirection, length, reversed, interval, block);
 
             if (mode == Mode.EXTRUDE || mode == Mode.JOIN) {
                 ClientPlayNetworking.send(
-                        UpdateBlocks.place(nextBlocks)
+                        UpdateBlocks.place(blockLine)
                 );
             } else if (mode == Mode.CUT || mode == Mode.MATCHCUT) {
                 ClientPlayNetworking.send(
-                        UpdateBlocks.destroy(nextBlocks.keySet())
+                        UpdateBlocks.destroy(blockLine.keySet())
                 );
             }
         }
     }
 
-    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Level level, BlockPos origin, Direction originFacing, Mode mode, PlaneDirection planeDirection, int length, boolean reversed, int interval, Map.Entry<BlockPos, BlockState> entry) {
-        BlockPos pos = entry.getKey();
-        BlockState state = entry.getValue();
+    private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Level level,
+                                                                    BlockPos origin,
+                                                                    Direction originFacing,
+                                                                    Mode mode,
+                                                                    PlaneDirection planeDirection,
+                                                                    int length,
+                                                                    boolean reversed,
+                                                                    int interval,
+                                                                    Map.Entry<BlockPos, BlockState> blocks) {
+        BlockPos pos = blocks.getKey();
+        BlockState state = blocks.getValue();
 
         Map<BlockPos, BlockState> blockLine = new HashMap<>();
 
@@ -183,8 +205,9 @@ public class MCADClient implements ClientModInitializer {
             switch (planeDirection) {
                 // From current active block's position using local coordinates
                 case A -> nextPos = Sketch.localOffset(pos, originFacing, 0, 0, offset);
-                case C -> nextPos = Sketch.localOffset(pos, originFacing, 0, offset, 0);
                 case B -> nextPos = Sketch.localOffset(pos, originFacing, -offset, 0, 0);
+                case C -> nextPos = Sketch.localOffset(pos, originFacing, 0, offset, 0);
+
             };
 
             // Not counting the active block, If next block is not air and mode is join, end line and return it.
@@ -205,18 +228,6 @@ public class MCADClient implements ClientModInitializer {
 
         }
         return blockLine;
-    }
-
-    private Map<BlockPos, BlockState> joinBlocks(Map<BlockPos, BlockState> blocks) {
-        Map<BlockPos, BlockState> newBlocks = new HashMap<>();
-
-        for (Map.Entry<BlockPos, BlockState> entry : blocks.entrySet()) {
-            BlockPos pos = entry.getKey();
-            BlockState state = entry.getValue();
-
-        }
-
-        return newBlocks;
     }
 
 

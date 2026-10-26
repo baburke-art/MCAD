@@ -16,6 +16,37 @@ import java.util.Map;
 
 public class Sketch {
 
+    public Map<BlockPos, BlockState> getAllBlocks(ClientLevel level,
+                                                   BlockPos origin,
+                                                   int size,
+                                                   PlaneDirection planeDirection
+    ) {
+        Map<BlockPos, BlockState> blocks = new LinkedHashMap<>();
+
+        Direction originFace = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
+
+        // StartBlock and endBlock inverted so it cuts blocks from top down to stop redstone from popping.
+
+        // Local coordinate of starting block next to origin
+        BlockPos endBlock = localOffset(origin, originFace, -1, 0, 1);
+
+        BlockPos startBlock = switch (planeDirection) {
+            case A -> localOffset(origin, originFace, -size, size - 1, 1);
+            case B -> localOffset(origin, originFace, -1, size - 1, size);
+            case C -> localOffset(origin, originFace, -size, 0, size);
+        };
+
+        for (BlockPos pos : BlockPos.betweenClosed(
+                startBlock,
+                endBlock
+        )) {
+
+            blocks.put(pos.immutable(), Blocks.AIR.defaultBlockState());
+
+        }
+        return blocks;
+    }
+
     public Map<BlockPos, BlockState> findActiveBlocks(
             ClientLevel level,
             BlockPos origin,
@@ -32,8 +63,8 @@ public class Sketch {
 
         BlockPos endBlock = switch (planeDirection) {
             case A -> localOffset(origin, originFace, -size, size - 1, 1);
-            case C -> localOffset(origin, originFace, -size, 0, size);
             case B -> localOffset(origin, originFace, -1, size - 1, size);
+            case C -> localOffset(origin, originFace, -size, 0, size);
         };
 
         // Neg z = North
@@ -54,7 +85,6 @@ public class Sketch {
 
             // For Visual Guide of plane
             // update when size or direction changes.
-            // if pos.state == Blocks.Air skip it
 
 //            BlockState plane_Colour;
 //

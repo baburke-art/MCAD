@@ -2,8 +2,8 @@ package baburke.mcad.net;
 
 public enum PlaneDirection {
     A("A"),
-    C("C"),
-    B("B");
+    B("B"),
+    C("C");
 
     private final String displayName;
 

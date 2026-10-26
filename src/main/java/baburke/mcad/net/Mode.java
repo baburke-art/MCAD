@@ -4,6 +4,7 @@ public enum Mode {
     EXTRUDE("Extrude"),
     JOIN("Join"),
     CUT("Cut"),
+    FASTCUT("Fast-Cut"),
     MATCHCUT("Match-Cut");
 
     private final String displayName;
