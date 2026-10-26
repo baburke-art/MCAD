@@ -1,18 +1,24 @@
 What's next?:
 
-    - Match Cut
+    - Origin block crafting recipe (cartography table center)
 
 Maybe?
 
-    - Visual indicator of sketch plane size (hard)
-        - Custom Blue (or match colour to the direction) transparent block
-        - Show guide only while MCAD Editor is open.
+    - Custom renderer for visual indicator of sketch planes(hard)
+        - Custom Blue (or match colour to the direction) transparent renders
+        - Show guide only while MCAD Editor is open with a size >= 1.
+        - A client-side block-shape overlay using Minecraft's world-rendering pipeline.
+        - Keep the marker coordinates in a separate list instead of registering or placing Minecraft blocks.
+        - translucent render layer
+        - Enable alpha blending, and preserve depth testing so the markers are naturally obscured by nearer terrain.
+        - You can disable depth testing if you want the markers visible through walls.
+        - Minecraft's rendering pipeline distinguishes solid, cutout and translucent geometry.
 
 
 Alpha Version 1.0
 
     - Extrude and Join
-    - Cut and Match-Cut
+    - Cut, Fast-cut and Match-Cut
     - Reverse
     - Interval (repeat pattern)
 

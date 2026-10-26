@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GEG",
+    "LCR",
+    "GSG"
+  ],
+  "key": {
+    "G": "minecraft:glass",
+    "E": "minecraft:emerald",
+    "L": "minecraft:lapis_lazuli",
+    "C": "minecraft:cartography_table",
+    "R": "minecraft:redstone",
+    "S": "minecraft:glowstone_dust"
+  },
+  "result": {
+    "id": "mcad:origin_block",
+    "count": 1
+  }
+}

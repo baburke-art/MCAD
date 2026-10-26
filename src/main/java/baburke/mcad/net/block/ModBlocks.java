@@ -29,12 +29,21 @@ public class ModBlocks {
             )
     );
 
-    public static Block registerBlock(String name, Function<BlockBehaviour.Properties, Block> function) {
-        Block toRegister = function.apply(BlockBehaviour.Properties.of().setId(ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(MCAD.MOD_ID, name))));
+    public static Block registerBlock(
+            String name,
+            Function<BlockBehaviour.Properties, Block> function
+    ) {
+        Identifier id = Identifier.fromNamespaceAndPath(MCAD.MOD_ID, name);
 
-        registerBlockItem(name, toRegister);
+        Block block = function.apply(
+                BlockBehaviour.Properties.of()
+                        .setId(ResourceKey.create(Registries.BLOCK, id))
+        );
 
-        return Registry.register(BuiltInRegistries.BLOCK, Identifier.fromNamespaceAndPath(MCAD.MOD_ID, name), toRegister);
+        Registry.register(BuiltInRegistries.BLOCK, id, block);
+        registerBlockItem(name, block);
+
+        return block;
     }
 
     private static void registerBlockItem(String name, Block block) {

@@ -32,6 +32,7 @@ public class OriginBlock extends HorizontalDirectionalBlock {
         );
     }
 
+
     public static BlockPos nearestOriginBlock(ClientLevel level,
                                               BlockPos center,
                                               int radius) {
@@ -43,7 +44,7 @@ public class OriginBlock extends HorizontalDirectionalBlock {
             BlockState state = level.getBlockState(pos);
 
             if (state.is(ModBlocks.ORIGIN_BLOCK)) {
-                return pos.immutable();
+                return pos;
             }
         }
 

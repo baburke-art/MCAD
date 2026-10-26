@@ -4,6 +4,8 @@ import baburke.mcad.net.block.ModBlocks;
 import baburke.mcad.net.item.ModItems;
 import baburke.mcad.net.network.BlockNetworking;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 
 import org.slf4j.Logger;
@@ -29,8 +31,6 @@ public class MCAD implements ModInitializer {
 		ModItems.registerModItems();
 		ModBlocks.registerModBlocks();
 		BlockNetworking.register();
-
-
 	}
 
 	public static Identifier id(String path) {

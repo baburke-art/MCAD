@@ -132,11 +132,6 @@ public class MCADClient implements ClientModInitializer {
         // try to find an origin block within max length of player
         BlockPos origin = OriginBlock.nearestOriginBlock(level, playerPos, MAX_LENGTH);
 
-
-        BlockPos test = new BlockPos(0, -60, 0);
-
-        System.out.println("Test block: " + level.getBlockState(test).getBlock());
-
         if (origin == null) {return;}
 
         // Find active blocks next to origin block
