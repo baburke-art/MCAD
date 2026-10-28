@@ -3,7 +3,6 @@ package baburke.mcad.net.gui;
 import baburke.mcad.net.PlaneDirection;
 import baburke.mcad.net.MCADClient;
 import baburke.mcad.net.Mode;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -349,20 +348,20 @@ public class MCADEditor extends Screen {
     protected void extractBlurredBackground(final GuiGraphicsExtractor graphics) {
     }
     // Darken background
-    @Override
-    public void extractBackground(
-            GuiGraphicsExtractor graphics,
-            int mouseX,
-            int mouseY,
-            float delta
-    ) {
-        // Darken the world like an inventory screen.
-        graphics.fill(
-                0, 0,
-                this.width, this.height,
-                0x80000000
-        );
-    }
+//    @Override
+//    public void extractBackground(
+//            GuiGraphicsExtractor graphics,
+//            int mouseX,
+//            int mouseY,
+//            float delta
+//    ) {
+//        // Darken the world like an inventory screen.
+//        graphics.fill(
+//                0, 0,
+//                this.width, this.height,
+//                0x80000000
+//        );
+//    }
 
     @Override
     public boolean isPauseScreen() {

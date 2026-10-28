@@ -12,8 +12,11 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -28,7 +31,13 @@ import java.util.Map;
 
 public class MCADClient implements ClientModInitializer {
 
+    private static final Minecraft client = Minecraft.getInstance();
+
     private static final int MAX_LENGTH = 200;
+
+    private static String originMessage = "";
+    private static long expiryTick = -1;
+    private static final long DISPLAY_TICKS = 120; // 3 seconds at 20 TPS
 
     // Defines Keybind category
     private static final KeyMapping.Category CATEGORY =
@@ -64,6 +73,17 @@ public class MCADClient implements ClientModInitializer {
                 }
             }
         });
+
+        // Origin found text id
+        HudElementRegistry.attachElementBefore(
+                VanillaHudElements.CHAT,
+                Identifier.fromNamespaceAndPath("mymod", "origin_location_text"),
+                (graphics, tickCounter) -> renderOriginText(graphics)
+        );
+
+        // Plane guide renderer
+        PlaneGuideRenderer.register();
+
     }
 
     public static void execute(
@@ -134,6 +154,8 @@ public class MCADClient implements ClientModInitializer {
 
         if (origin == null) {return;}
 
+        showOriginText(origin);
+
         Direction originFacing = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
 
         if (mode == Mode.FASTCUT) {
@@ -169,6 +191,36 @@ public class MCADClient implements ClientModInitializer {
                 );
             }
         }
+    }
+
+    public static void renderOriginText(GuiGraphicsExtractor graphics) {
+        if (expiryTick < 0) {
+            return;
+        }
+
+        long currentTick = client.level.getGameTime();
+
+        if (currentTick >= expiryTick) {
+            return;
+        }
+
+        graphics.text(
+                client.font,
+                originMessage,
+                100,
+                200,
+                0xFFFFFFFF,
+                false
+        );
+    }
+
+    private static void showOriginText(BlockPos pos) {
+        originMessage = "Origin found at ("
+                + pos.getX() + ", "
+                + pos.getY() + ", "
+                + pos.getZ() + ")";
+
+        expiryTick = client.level.getGameTime() + 60;
     }
 
     private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Level level,
