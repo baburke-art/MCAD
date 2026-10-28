@@ -1,5 +1,7 @@
 package baburke.mcad.net;
 
+import baburke.mcad.net.feature.Mode;
+import baburke.mcad.net.feature.PlaneDirection;
 import baburke.mcad.net.feature.Sketch;
 import baburke.mcad.net.block.OriginBlock;
 import baburke.mcad.net.gui.MCADEditor;
@@ -26,12 +28,15 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.jspecify.annotations.NonNull;
 
+import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MCADClient implements ClientModInitializer {
 
-    private static final Minecraft client = Minecraft.getInstance();
+    private static final Minecraft CLIENT = Minecraft.getInstance();
 
     private static final int MAX_LENGTH = 200;
 
@@ -74,16 +79,55 @@ public class MCADClient implements ClientModInitializer {
             }
         });
 
-        // Origin found text id
+        // Origin location text id
         HudElementRegistry.attachElementBefore(
                 VanillaHudElements.CHAT,
                 Identifier.fromNamespaceAndPath("mymod", "origin_location_text"),
                 (graphics, tickCounter) -> renderOriginText(graphics)
         );
+    }
+
+    public static void renderGuidePlane(boolean enable) {
+        PlaneGuideRenderer.setRenderEnabled(enable);
+    }
+
+    // Updates the rendered guide plane when size or direction changes.
+    public static void updateGuidePlane(String sizeInput, PlaneDirection planeDirection) {
+        ClientLevel level = CLIENT.level;
+        BlockPos playerPos = CLIENT.player.blockPosition();
+
+        // try to find an origin block within max length of player
+        BlockPos origin = OriginBlock.nearestOriginBlock(level, playerPos, MAX_LENGTH);
+        if (origin == null) {return;}
+
+        int size = returnInt(sizeInput, "Invalid size");
+        // if size is 0 stop rendering guide
+        if (size <= 0) {
+            MCADClient.renderGuidePlane(false);
+            return;
+        }
+
+        MCADClient.renderGuidePlane(true);
+
+        // Find all blocks next to origin block
+        assert level != null;
+        Map<BlockPos, BlockState> allBlocks = new Sketch().getAllBlocks(level, origin, size, planeDirection);
+        // Convert map into list
+        List<BlockPos> blockList = new ArrayList<>(allBlocks.keySet());
 
         // Plane guide renderer
-        PlaneGuideRenderer.register();
+        PlaneGuideRenderer.register(blockList, planeDirection);
+    }
 
+    private static int returnInt(String input, String errorMessage) {
+        int value;
+        try {
+            value = Integer.parseInt(input);
+        } catch (NumberFormatException e) {
+            System.out.println(errorMessage + " : " + input);
+            return 0;
+        }
+        return value;
     }
 
     public static void execute(
@@ -95,28 +139,9 @@ public class MCADClient implements ClientModInitializer {
             boolean reversed,
             String intervalInput
     ){
-        int size;
-        int length;
-        int interval;
-
-        try {
-            size = Integer.parseInt(sizeInput);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid size: " + sizeInput);
-            return;
-        }
-        try {
-            length = Integer.parseInt(lengthInput);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid length: " + lengthInput);
-            return;
-        }
-        try {
-            interval = Integer.parseInt(intervalInput);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid interval: " + intervalInput);
-            return;
-        }
+        int size = returnInt(sizeInput,  "Invalid size");
+        int length =  returnInt(lengthInput,  "Invalid length");
+        int interval =  returnInt(intervalInput,  "Invalid interval");
 
         // Validate length and size
         if(length == 0 || size == 0) {return;}
@@ -145,15 +170,15 @@ public class MCADClient implements ClientModInitializer {
         System.out.println("Reversed: " + reversed);
         System.out.println("Interval: " + interval);
 
-        Minecraft client = Minecraft.getInstance();
-        BlockPos playerPos = client.player.blockPosition();
-        ClientLevel level = client.level;
+        BlockPos playerPos = CLIENT.player.blockPosition();
+        ClientLevel level = CLIENT.level;
 
         // try to find an origin block within max length of player
         BlockPos origin = OriginBlock.nearestOriginBlock(level, playerPos, MAX_LENGTH);
 
         if (origin == null) {return;}
 
+        // on screen text showing where origin is
         showOriginText(origin);
 
         Direction originFacing = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
@@ -198,14 +223,14 @@ public class MCADClient implements ClientModInitializer {
             return;
         }
 
-        long currentTick = client.level.getGameTime();
+        long currentTick = CLIENT.level.getGameTime();
 
         if (currentTick >= expiryTick) {
             return;
         }
 
         graphics.text(
-                client.font,
+                CLIENT.font,
                 originMessage,
                 100,
                 200,
@@ -220,7 +245,7 @@ public class MCADClient implements ClientModInitializer {
                 + pos.getY() + ", "
                 + pos.getZ() + ")";
 
-        expiryTick = client.level.getGameTime() + 60;
+        expiryTick = CLIENT.level.getGameTime() + 60;
     }
 
     private static @NonNull Map<BlockPos, BlockState> getNextBlocks(Level level,

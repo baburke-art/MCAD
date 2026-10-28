@@ -1,6 +1,6 @@
 What's next?:
 
-    - Origin block crafting recipe (cartography table center)
+    - New origin block search when executing.
 
 Maybe?
 

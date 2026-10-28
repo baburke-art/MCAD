@@ -1,8 +1,5 @@
 package baburke.mcad.net.feature;
 
-import baburke.mcad.net.PlaneDirection;
-import baburke.mcad.net.network.UpdateBlocks;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Direction;

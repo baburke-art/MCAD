@@ -1,8 +1,8 @@
 package baburke.mcad.net.gui;
 
-import baburke.mcad.net.PlaneDirection;
+import baburke.mcad.net.feature.PlaneDirection;
 import baburke.mcad.net.MCADClient;
-import baburke.mcad.net.Mode;
+import baburke.mcad.net.feature.Mode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -83,6 +83,8 @@ public class MCADEditor extends Screen {
     public boolean keyPressed(KeyEvent event) {
         if (OPEN_FORM.matches(event)) {
             Minecraft.getInstance().gui.setScreen(null);
+            // Stop rendering guide plane
+            MCADClient.renderGuidePlane(false);
             return true;
         }
         return super.keyPressed(event);
@@ -197,7 +199,17 @@ public class MCADEditor extends Screen {
         sizeInput.setValue(sizeValue);
         sizeInput.setHint(Component.literal("0"));
         // When size input changes
-        sizeInput.setResponder(value -> sizeValue = value.isEmpty() ? "0" : value);
+        sizeInput.setResponder(value -> {
+            String newSizeValue = value.isEmpty() ? "0" : value;
+
+            // if size changed send update
+            if (!newSizeValue.equals(sizeValue)) {
+                sizeValue = newSizeValue;
+                // Update guide plane
+                MCADClient.updateGuidePlane(sizeValue, selectedPlaneDirection);
+            }
+
+        });
         form.addChild(sizeInput);
 
         // Sets the direction of the sketch plane
@@ -228,6 +240,10 @@ public class MCADEditor extends Screen {
                         button -> {
                             nameValue = nameInput.getValue();
                             selectedPlaneDirection = planeDirection;
+
+                            // Update guide plane
+                            MCADClient.updateGuidePlane(sizeValue, selectedPlaneDirection);
+
                             directionDropdownOpen = false;
                             rebuildWidgets();
                         }
@@ -340,6 +356,10 @@ public class MCADEditor extends Screen {
                 reversed,
                 intervalValue
         );
+
+        // Stop rendering guide plane
+        MCADClient.renderGuidePlane(false);
+
         onClose();
     }
 

@@ -1,4 +1,4 @@
-package baburke.mcad.net;
+package baburke.mcad.net.feature;
 
 public enum Mode {
     EXTRUDE("Extrude"),

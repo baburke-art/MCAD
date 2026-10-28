@@ -1,12 +1,12 @@
 package baburke.mcad.net;
 
+import baburke.mcad.net.feature.PlaneDirection;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline;
 import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
@@ -16,18 +16,18 @@ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelExtractionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.StagedVertexBuffer;
 import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import java.util.Optional;
-import java.util.OptionalDouble;
+import java.util.*;
+import java.util.List;
 
 public class PlaneGuideRenderer {
 
@@ -37,31 +37,6 @@ public class PlaneGuideRenderer {
             .build()
     );
 
-    private static final PlaneGuideRenderer INSTANCE =
-            new PlaneGuideRenderer();
-
-    public static void register() {
-        LevelExtractionEvents.END_EXTRACTION.register(
-                INSTANCE::extractWaypoint
-        );
-
-        LevelRenderEvents.END_MAIN.register(
-                INSTANCE::renderAndDrawWaypoint
-        );
-    }
-
-    // Used in the drawing phase (extracted data)
-    private WaypointRenderState waypointState;
-
-    private void extractWaypoint(LevelExtractionContext context) {
-        // Access data from the world or anything here in the extraction phase.
-        // You can only access the (immutable and thread safe) render state in the drawing phase.
-
-        // change to list instead
-
-        this.waypointState = new WaypointRenderState(0, -59, 0, 1f, 0f, 0f, 0.1f);
-    }
-
     // Render states should be immutable, thread safe, and fast to create.
     private record WaypointRenderState(int x, int y, int z, float r, float g, float b, float a) { }
 
@@ -70,8 +45,60 @@ public class PlaneGuideRenderer {
     private static final Matrix4f TEXTURE_MATRIX = new Matrix4f();
     private static final StagedVertexBuffer stagedBuffer = new StagedVertexBuffer(() -> "Waypoints Buffer", RenderType.SMALL_BUFFER_SIZE);
 
+    private static boolean RENDER_ENABLED = true;
+
+    public static void setRenderEnabled(boolean enabled) {
+        RENDER_ENABLED = enabled;
+    }
+
+    public static boolean getRenderEnabled() {
+        return RENDER_ENABLED;
+    }
+
+    private static final PlaneGuideRenderer INSTANCE =
+            new PlaneGuideRenderer();
+
+    public static void register(List<BlockPos> positions, PlaneDirection planeDirection) {
+        LevelExtractionEvents.END_EXTRACTION.register(
+                context -> INSTANCE.extractWaypoint(context, positions, planeDirection)
+        );
+
+        LevelRenderEvents.END_MAIN.register(
+                INSTANCE::renderAndDrawWaypoint
+        );
+    }
+
+    // Used in the drawing phase (extracted data)
+    private List<WaypointRenderState> waypointStates = List.of();
+
+    private void extractWaypoint(
+            LevelExtractionContext context,
+            List<BlockPos> positions,
+            PlaneDirection planeDirection
+    ) {
+        if (!RENDER_ENABLED) {
+            waypointStates = List.of();
+            return;
+        }
+
+        // Only access the (immutable and thread safe) render state in the drawing phase.
+        List<WaypointRenderState> cubes = new ArrayList<>();
+
+        for (BlockPos pos : positions) {
+            cubes.add(new WaypointRenderState(
+                    pos.getX(), pos.getY(), pos.getZ(),
+                    planeDirection.red(), planeDirection.green(), planeDirection.blue(), planeDirection.alpha()
+            ));
+        }
+        this.waypointStates = List.copyOf(cubes);
+    }
+
     private void renderAndDrawWaypoint(LevelRenderContext context
     ) {
+        // If disabled stop
+        if (!RENDER_ENABLED) {
+            return;
+        }
 
         RenderPipeline renderPipeline = PlaneGuideRenderer.FILLED_THROUGH_WALLS;
         VertexFormat formatBinding = renderPipeline.getVertexFormatBinding(0);
@@ -97,7 +124,8 @@ public class PlaneGuideRenderer {
     private void renderWaypoint(LevelRenderContext context,
                                 StagedVertexBuffer.Draw draw
     ) {
-        if (this.waypointState == null) {
+        if (this.waypointStates == null) {
+            stagedBuffer.upload();
             return;
         }
 
@@ -109,8 +137,15 @@ public class PlaneGuideRenderer {
 
         final VertexConsumer builder = stagedBuffer.getVertexBuilder(draw);
 
-        this.renderFilledBox(matrices.last().pose(), builder, this.waypointState.x(), this.waypointState.y(), this.waypointState.z(), this.waypointState.x() + 1, this.waypointState.y() + 1, this.waypointState.z() + 1, this.waypointState.r(), this.waypointState.g(), this.waypointState.b(), this.waypointState.a());
-
+        for (WaypointRenderState waypoint : this.waypointStates) {
+            this.renderFilledBox(
+                    matrices.last().pose(),
+                    builder,
+                    waypoint.x(), waypoint.y(), waypoint.z(),
+                    waypoint.x() + 1, waypoint.y() + 1, waypoint.z() + 1,
+                    waypoint.r(), waypoint.g(), waypoint.b(), waypoint.a()
+            );
+        }
         matrices.popPose();
     }
 
