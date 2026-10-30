@@ -49,40 +49,26 @@ public class PlaneGuideRenderer {
 
     private static final int SIZE_LIMIT = 25;
 
-    public static void setRenderEnabled(boolean enabled) {
-        RENDER_ENABLED = enabled;
-    }
+    // Used in the drawing phase (extracted data)
+    private List<WaypointRenderState> waypointStates = List.of();
+
+    public static void setRenderEnabled(boolean enabled) {RENDER_ENABLED = enabled;}
 
     public static boolean getRenderEnabled() {
         return RENDER_ENABLED;
     }
 
-    private static final PlaneGuideRenderer INSTANCE =
-            new PlaneGuideRenderer();
-
-    public static void register(List<BlockPos> positions, PlaneDirection planeDirection) {
-        LevelExtractionEvents.END_EXTRACTION.register(
-                context -> INSTANCE.extractWaypoint(context, positions, planeDirection)
-        );
-
-        LevelRenderEvents.END_MAIN.register(
-                INSTANCE::renderAndDrawWaypoint
-        );
+    public void register() {
+        LevelRenderEvents.END_MAIN.register(this::renderAndDrawWaypoint);
     }
 
-    // Used in the drawing phase (extracted data)
-    private List<WaypointRenderState> waypointStates = List.of();
-
-    private void extractWaypoint(
-            LevelExtractionContext context,
-            List<BlockPos> positions,
-            PlaneDirection planeDirection
+    public void createGuide(List<BlockPos> positions,
+                                    PlaneDirection planeDirection
     ) {
         if (!RENDER_ENABLED) {
             waypointStates = List.of();
             return;
         }
-
         // Only access the (immutable and thread safe) render state in the drawing phase.
         List<WaypointRenderState> cubes = new ArrayList<>();
 
@@ -92,44 +78,43 @@ public class PlaneGuideRenderer {
                     planeDirection.red(), planeDirection.green(), planeDirection.blue(), planeDirection.alpha()
             ));
         }
-
-
         this.waypointStates = List.copyOf(cubes);
     }
 
     private void renderAndDrawWaypoint(LevelRenderContext context
     ) {
         // If disabled stop
-        if (!RENDER_ENABLED) {
-            return;
+        try {
+            if (!RENDER_ENABLED || waypointStates == null || waypointStates.isEmpty()) {
+                return;
+            }
+            RenderPipeline renderPipeline = PlaneGuideRenderer.FILLED_THROUGH_WALLS;
+            VertexFormat formatBinding = renderPipeline.getVertexFormatBinding(0);
+
+            assert formatBinding != null;
+
+            PrimitiveTopology primitive = renderPipeline.getPrimitiveTopology();
+            StagedVertexBuffer.Draw draw = stagedBuffer.appendDraw(formatBinding, primitive, primitive == PrimitiveTopology.QUADS ? RenderSystem.getProjectionType().vertexSorting() : null);
+
+            this.renderWaypoint(context, draw);
+
+            stagedBuffer.upload();
+
+            StagedVertexBuffer.ExecuteInfo info = stagedBuffer.getExecuteInfo(draw);
+
+            if (info != null) {
+                draw(Minecraft.getInstance(), info, renderPipeline);
+            }
+        } finally {
+            stagedBuffer.endFrame();
         }
-
-        RenderPipeline renderPipeline = PlaneGuideRenderer.FILLED_THROUGH_WALLS;
-        VertexFormat formatBinding = renderPipeline.getVertexFormatBinding(0);
-
-        assert formatBinding != null;
-
-        PrimitiveTopology primitive = renderPipeline.getPrimitiveTopology();
-        StagedVertexBuffer.Draw draw = stagedBuffer.appendDraw(formatBinding, primitive, primitive == PrimitiveTopology.QUADS ? RenderSystem.getProjectionType().vertexSorting() : null);
-
-        this.renderWaypoint(context, draw);
-
-        stagedBuffer.upload();
-
-        StagedVertexBuffer.ExecuteInfo info = stagedBuffer.getExecuteInfo(draw);
-
-        if (info != null) {
-            draw(Minecraft.getInstance(), info, renderPipeline);
-        }
-
-        stagedBuffer.endFrame();
     }
 
     private void renderWaypoint(LevelRenderContext context,
                                 StagedVertexBuffer.Draw draw
     ) {
         if (this.waypointStates == null) {
-            stagedBuffer.close();
+            close();
             return;
         }
 
@@ -207,10 +192,6 @@ public class PlaneGuideRenderer {
 
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform("DynamicTransforms", dynamicTransforms);
-
-            // Bind texture if applicable:
-            // Sampler0 is used for texture inputs in vertices
-            // renderPass.bindTexture("Sampler0", textureSetup.texure0(), textureSetup.sampler0());
 
             renderPass.setVertexBuffer(0, info.vertexBuffer().slice());
             renderPass.setIndexBuffer(info.indexBuffer(), info.indexType());

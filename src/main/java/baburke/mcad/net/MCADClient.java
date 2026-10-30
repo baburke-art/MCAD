@@ -42,6 +42,9 @@ public class MCADClient implements ClientModInitializer {
     private static long expiryTick = -1;
     private static final long DISPLAY_TICKS = 120; // 3 seconds at 20 TPS
 
+    // Plane guide renderer
+    private static PlaneGuideRenderer planeGuideRenderer = new PlaneGuideRenderer();
+
     // Defines Keybind category
     private static final KeyMapping.Category CATEGORY =
             KeyMapping.Category.register(
@@ -83,6 +86,10 @@ public class MCADClient implements ClientModInitializer {
                 Identifier.fromNamespaceAndPath("mymod", "origin_location_text"),
                 (graphics, tickCounter) -> renderOriginText(graphics)
         );
+
+        // Register the plane guide renderer
+        planeGuideRenderer.register();
+
     }
 
     public static void renderGuidePlane(boolean enable) {
@@ -100,7 +107,7 @@ public class MCADClient implements ClientModInitializer {
 
         int size = returnInt(sizeInput, "Invalid size");
         // if size is 0 stop rendering guide
-        if (size <= 0) {
+        if (size <= 0 || size >= MAX_LENGTH) {
             MCADClient.renderGuidePlane(false);
             return;
         }
@@ -113,8 +120,7 @@ public class MCADClient implements ClientModInitializer {
         // Convert map into list
         List<BlockPos> blockList = new ArrayList<>(allBlocks.keySet());
 
-        // Plane guide renderer
-        PlaneGuideRenderer.register(blockList, planeDirection);
+        planeGuideRenderer.createGuide(blockList, planeDirection);
     }
 
     private static int returnInt(String input, String errorMessage) {

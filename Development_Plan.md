@@ -2,6 +2,10 @@ What's next?:
 
     - New origin block search when executing.
 
+bugs
+
+    - Get new origin block pos, don't use old one.
+
 Maybe?
 
     - Custom renderer for visual indicator of sketch planes (too hard)
@@ -15,10 +19,7 @@ Alpha Version 1.0
     - Cut, Fast-cut and Match-Cut
     - Reverse
     - Interval (repeat pattern)
-
-2.0
-
-    - Add 'depth' input for sketch plane to have multiple layers of active blocks.
+    - Depth
 
 3.0
 

@@ -201,8 +201,6 @@ public class MCADEditor extends Screen {
         // When size input changes
         sizeInput.setResponder(value -> {
             sizeValue = value.isEmpty() ? "0" : value;
-
-            System.out.println(sizeValue);
             // Update guide plane
             MCADClient.updateGuidePlane(sizeValue, selectedPlaneDirection);
         });

@@ -32,10 +32,12 @@ public class OriginBlock extends HorizontalDirectionalBlock {
         );
     }
 
-
     public static BlockPos nearestOriginBlock(ClientLevel level,
                                               BlockPos center,
-                                              int radius) {
+                                              int radius
+    ) {
+        BlockPos nearest = null;
+        double nearestDistance = Double.POSITIVE_INFINITY;
 
         for (BlockPos pos : BlockPos.betweenClosed(
                 center.offset(-radius, -radius, -radius),
@@ -44,10 +46,14 @@ public class OriginBlock extends HorizontalDirectionalBlock {
             BlockState state = level.getBlockState(pos);
 
             if (state.is(ModBlocks.ORIGIN_BLOCK)) {
-                return pos;
+                double distance = pos.distSqr(center);
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearest = pos.immutable();
+                }
             }
         }
 
-        return null;
+        return nearest;
     }
 }
