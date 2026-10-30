@@ -200,15 +200,11 @@ public class MCADEditor extends Screen {
         sizeInput.setHint(Component.literal("0"));
         // When size input changes
         sizeInput.setResponder(value -> {
-            String newSizeValue = value.isEmpty() ? "0" : value;
+            sizeValue = value.isEmpty() ? "0" : value;
 
-            // if size changed send update
-            if (!newSizeValue.equals(sizeValue)) {
-                sizeValue = newSizeValue;
-                // Update guide plane
-                MCADClient.updateGuidePlane(sizeValue, selectedPlaneDirection);
-            }
-
+            System.out.println(sizeValue);
+            // Update guide plane
+            MCADClient.updateGuidePlane(sizeValue, selectedPlaneDirection);
         });
         form.addChild(sizeInput);
 

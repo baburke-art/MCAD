@@ -47,6 +47,8 @@ public class PlaneGuideRenderer {
 
     private static boolean RENDER_ENABLED = true;
 
+    private static final int SIZE_LIMIT = 25;
+
     public static void setRenderEnabled(boolean enabled) {
         RENDER_ENABLED = enabled;
     }
@@ -90,6 +92,8 @@ public class PlaneGuideRenderer {
                     planeDirection.red(), planeDirection.green(), planeDirection.blue(), planeDirection.alpha()
             ));
         }
+
+
         this.waypointStates = List.copyOf(cubes);
     }
 
@@ -125,7 +129,7 @@ public class PlaneGuideRenderer {
                                 StagedVertexBuffer.Draw draw
     ) {
         if (this.waypointStates == null) {
-            stagedBuffer.upload();
+            stagedBuffer.close();
             return;
         }
 
