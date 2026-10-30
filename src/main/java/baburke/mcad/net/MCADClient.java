@@ -183,7 +183,7 @@ public class MCADClient implements ClientModInitializer {
         if (origin == null) {return;}
 
         // on screen text showing where origin is
-        showOriginText(origin);
+        //showOriginText(origin);
 
         Direction originFacing = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
 
