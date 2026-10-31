@@ -104,16 +104,21 @@ public final class BlockNetworking {
                             // Apply the block update.
                             level.setBlock(pos, state, 3);
 
-                            // Restore active block entity data
+                            // Copy active block entity data into new block
                             if (activeTag != null) {
-                                if (blockEntity != null) {
+                                BlockEntity newBlockEntity = level.getBlockEntity(pos);
+
+                                if (newBlockEntity != null &&
+                                        newBlockEntity.getType() == activeBlockEntity.getType()) {
+
                                     ValueInput input = TagValueInput.create(
                                             ProblemReporter.DISCARDING,
                                             level.registryAccess(),
                                             activeTag
                                     );
-                                    blockEntity.loadWithComponents(input);
-                                    blockEntity.setChanged();
+
+                                    newBlockEntity.loadWithComponents(input);
+                                    newBlockEntity.setChanged();
                                 }
                             }
                         }
