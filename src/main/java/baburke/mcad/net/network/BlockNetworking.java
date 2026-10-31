@@ -9,15 +9,15 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.Container;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.ValueInput;
-
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -57,29 +57,22 @@ public final class BlockNetworking {
                         // First block = the "active" block
                         BlockPos activeBlock = blocks.keySet().iterator().next();
                         // Store active blocks entity data first on server.
-                        BlockEntity blockEntity = level.getBlockEntity(activeBlock);
-
-                        CompoundTag tag;
-                        BlockEntity copy = null;
+                        BlockEntity activeBlockEntity = level.getBlockEntity(activeBlock);
 
                         // Save a copy because active block is deleted to register block updates like copper golem.
-                        if (blockEntity != null) {
-                            tag = blockEntity.saveWithoutMetadata(level.registryAccess());
-                            copy = blockEntity.getType().create(activeBlock, blockEntity.getBlockState());
+                        // Save active block entity data before modifications
+                        CompoundTag activeTag = null;
 
-                            ValueInput input = TagValueInput.create(
-                                    ProblemReporter.DISCARDING,
-                                    level.registryAccess(),
-                                    tag
+                        if (activeBlockEntity != null) {
+                            activeTag = activeBlockEntity.saveWithoutMetadata(
+                                    level.registryAccess()
                             );
-                            copy.loadWithComponents(input);
-
-                            blockEntity.setRemoved();
                         }
 
                         for (var entry : blocks.entrySet()) {
                             BlockPos pos = entry.getKey();
                             BlockState state = entry.getValue();
+                            BlockEntity blockEntity = level.getBlockEntity(pos);
 
                             // Don't modify unloaded positions.
                             if (!level.isLoaded(pos)) {
@@ -111,33 +104,23 @@ public final class BlockNetworking {
                             // Apply the block update.
                             level.setBlock(pos, state, 3);
 
-                            // update relevant block entity (chest with items, sign with writing, etc)
-                            if (copy != null) {
-                                if (copy instanceof ChestBlockEntity source
-                                        && level.getBlockEntity(pos) instanceof ChestBlockEntity target) {
-                                    int count = Math.min(source.getContainerSize(), target.getContainerSize());
-
-                                    for (int i = 0; i < count; i++) {
-                                        target.setItem(i, source.getItem(i).copy());
-                                    }
-
-                                    target.setChanged();
-                                } else if (copy instanceof SignBlockEntity source
-                                        && level.getBlockEntity(pos) instanceof SignBlockEntity target) {
-
-                                    SignText front = source.getText(SignTextSlot.FRONT);
-                                    SignText back = source.getText(SignTextSlot.BACK);
-
-                                    target.setText(front, SignTextSlot.FRONT);
-                                    target.setText(back, SignTextSlot.BACK);
-
-                                    target.setChanged();
+                            // Restore active block entity data
+                            if (activeTag != null) {
+                                if (blockEntity != null) {
+                                    ValueInput input = TagValueInput.create(
+                                            ProblemReporter.DISCARDING,
+                                            level.registryAccess(),
+                                            activeTag
+                                    );
+                                    blockEntity.loadWithComponents(input);
+                                    blockEntity.setChanged();
                                 }
-
-                                // to stop items in active block chests from popping out into items when active block destroyed.
-                                blockEntity.clearRemoved();
                             }
                         }
+                        // update relevant block entity (chest with items, sign with writing, etc)
+                        // to stop items in active block chests from popping out into items when active block destroyed.
+//                        assert activeBlockEntity != null;
+//                        activeBlockEntity.clearRemoved();
                     });
                 }
         );
