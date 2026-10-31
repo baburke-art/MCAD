@@ -10,6 +10,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public record UpdateBlocks(Map<BlockPos, BlockState> blocks)
@@ -22,7 +23,7 @@ public record UpdateBlocks(Map<BlockPos, BlockState> blocks)
     public static final StreamCodec<RegistryFriendlyByteBuf, UpdateBlocks> CODEC =
             StreamCodec.composite(
                     ByteBufCodecs.map(
-                            java.util.HashMap::new,
+                            java.util.LinkedHashMap::new,
                             BlockPos.STREAM_CODEC,
                             ByteBufCodecs.fromCodecWithRegistries(BlockState.CODEC)
                     ),
@@ -30,30 +31,24 @@ public record UpdateBlocks(Map<BlockPos, BlockState> blocks)
                     UpdateBlocks::new
             );
 
-    public static UpdateBlocks place(BlockPos pos, BlockState state) {
-        Map<BlockPos, BlockState> blocks = new HashMap<>();
-        blocks.put(pos, state);
-        return new UpdateBlocks(blocks);
-    }
-
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
 
-    // Destroy blocks
-    public static UpdateBlocks destroy(Iterable<BlockPos> positions) {
-        Map<BlockPos, BlockState> blocks = new HashMap<>();
+    // Update blocks by destroying
+    public static UpdateBlocks update(Map<BlockPos, BlockState> positions, BlockState state) {
+        Map<BlockPos, BlockState> blocks = new LinkedHashMap<>();
 
-        for (BlockPos pos : positions) {
-            blocks.put(pos, Blocks.AIR.defaultBlockState());
+        for (BlockPos pos : positions.keySet()) {
+            blocks.put(pos, state);
         }
 
         return new UpdateBlocks(blocks);
     }
 
-    // Place blocks
-    public static UpdateBlocks place(Map<BlockPos, BlockState> blocks) {
-        return new UpdateBlocks(new HashMap<>(blocks));
+    // Update blocks by placing
+    public static UpdateBlocks update(Map<BlockPos, BlockState> blocks) {
+        return new UpdateBlocks(new LinkedHashMap<>(blocks));
     }
 }

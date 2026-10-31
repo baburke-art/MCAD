@@ -24,6 +24,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.jspecify.annotations.NonNull;
@@ -164,8 +165,6 @@ public class MCADClient implements ClientModInitializer {
 
         if (interval > MAX_LENGTH || interval < 0) {interval = 0;}
 
-        //MCADClient.execute(size, length, reversed);
-
         //System.out.println("Name: " + name);
         System.out.println("Mode: " + mode);
         System.out.println("Size: " + size);
@@ -195,7 +194,7 @@ public class MCADClient implements ClientModInitializer {
                 Map<BlockPos, BlockState> blockLine = getNextBlocks(level, origin, originFacing, mode, planeDirection, length, reversed, interval, block);
 
                 ClientPlayNetworking.send(
-                        UpdateBlocks.destroy(blockLine.keySet())
+                        UpdateBlocks.update(blockLine, Blocks.AIR.defaultBlockState())
                 );
             }
             return;
@@ -204,19 +203,18 @@ public class MCADClient implements ClientModInitializer {
         // Find active blocks next to origin block
         Map<BlockPos, BlockState> activeBlocks = new Sketch().findActiveBlocks(level, origin, size, planeDirection);
 
-        // For each block in map
+        // For each active block
         for (Map.Entry<BlockPos, BlockState> block : activeBlocks.entrySet()) {
-
             // Map of the blocks along the full length of one active block at a time
             Map<BlockPos, BlockState> blockLine = getNextBlocks(level, origin, originFacing, mode, planeDirection, length, reversed, interval, block);
 
             if (mode == Mode.EXTRUDE || mode == Mode.JOIN) {
                 ClientPlayNetworking.send(
-                        UpdateBlocks.place(blockLine)
+                        UpdateBlocks.update(blockLine)
                 );
             } else if (mode == Mode.CUT || mode == Mode.MATCHCUT) {
                 ClientPlayNetworking.send(
-                        UpdateBlocks.destroy(blockLine.keySet())
+                        UpdateBlocks.update(blockLine, Blocks.AIR.defaultBlockState())
                 );
             }
         }
@@ -226,13 +224,11 @@ public class MCADClient implements ClientModInitializer {
         if (expiryTick < 0) {
             return;
         }
-
         long currentTick = CLIENT.level.getGameTime();
 
         if (currentTick >= expiryTick) {
             return;
         }
-
         graphics.text(
                 CLIENT.font,
                 originMessage,
@@ -264,7 +260,7 @@ public class MCADClient implements ClientModInitializer {
         BlockPos pos = blocks.getKey();
         BlockState state = blocks.getValue();
 
-        Map<BlockPos, BlockState> blockLine = new HashMap<>();
+        Map<BlockPos, BlockState> blockLine = new LinkedHashMap<>();
 
         // Add active block
         blockLine.put(pos, state);
