@@ -150,25 +150,22 @@ public class MCADClient implements ClientModInitializer {
         int length =  returnInt(lengthInput,  "Invalid length");
         int interval =  returnInt(intervalInput,  "Invalid interval");
 
-        // Validate size, depth and length
+        // Validate size, depth, length, and interval
         if(size <= 0 || length <= 1) {return;}
         if (size > MAX_LENGTH) {
-            System.out.println("Max size is 100!");
+            System.out.println("Max size is " + MAX_LENGTH);
             return;
         }
         if (depth < 1) depth = 1;
-        if (length > MAX_LENGTH) {
-            System.out.println("Max length is 100!");
+        if (depth > MAX_LENGTH) {
+            System.out.println("Max depth is " + MAX_LENGTH);
             return;
         }
-
+        if (length > MAX_LENGTH) {
+            System.out.println("Max length is " + MAX_LENGTH);
+            return;
+        }
         if (interval > MAX_LENGTH || interval < 0) {interval = 0;}
-
-        // Offset for active blocks.
-//        if (depth > 1) {
-//            // Add any interval
-//            depth += interval;
-//        }
 
         BlockPos playerPos = CLIENT.player.blockPosition();
         ClientLevel level = CLIENT.level;
@@ -184,7 +181,7 @@ public class MCADClient implements ClientModInitializer {
         Direction originFacing = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
 
         //System.out.println("Name: " + name);
-        System.out.println("Origin Found: " + origin + " (facing) -> " + originFacing);
+        System.out.println("Origin Found: " + origin + " facing " + originFacing);
         System.out.println("Mode: " + mode);
         System.out.println("Size: " + size);
         System.out.println("Direction: " + planeDirection);

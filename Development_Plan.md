@@ -9,7 +9,7 @@ Maybe?
         - Show guide only while MCAD Editor is open with a size >= 1.
         - A client-side block-shape overlay using Minecraft's world-rendering pipeline.
 
-Alpha Version 1.0
+2.0
 
     - Extrude and Join
     - Cut, Fast-cut and Match-Cut
@@ -23,6 +23,7 @@ Alpha Version 1.0
     - Add undo and redo
     - Rotate (0-360) extrude and cut around axis
     - Mirror extrude
+    - Settings menu (size, length
 
 4.0
 
