@@ -1,11 +1,6 @@
 What's next?:
 
-    - New origin block search when executing.
-    - Extrude with Block data (chest with items, sign with writing)
-
-bugs
-
-    - Get new origin block pos, don't use old one.
+    - 
 
 Maybe?
 

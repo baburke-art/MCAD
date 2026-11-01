@@ -22,6 +22,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -29,7 +30,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.jspecify.annotations.NonNull;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 
@@ -140,38 +140,35 @@ public class MCADClient implements ClientModInitializer {
             Mode mode,
             String sizeInput,
             PlaneDirection planeDirection,
+            String depthInput,
             String lengthInput,
             boolean reversed,
             String intervalInput
     ){
         int size = returnInt(sizeInput,  "Invalid size");
+        int depth = returnInt(depthInput, "Invalid depth");
         int length =  returnInt(lengthInput,  "Invalid length");
         int interval =  returnInt(intervalInput,  "Invalid interval");
 
-        // Validate length and size
-        if(length == 0 || size == 0) {return;}
-        if (length < 0 || size < 0) {
-            System.out.println("Invalid negative!");
-            return;
-        }
-        if (length > MAX_LENGTH) {
-            System.out.println("Max length is 100!");
-            return;
-        }
+        // Validate size, depth and length
+        if(size <= 0 || length <= 1) {return;}
         if (size > MAX_LENGTH) {
             System.out.println("Max size is 100!");
+            return;
+        }
+        if (depth < 1) depth = 1;
+        if (length > MAX_LENGTH) {
+            System.out.println("Max length is 100!");
             return;
         }
 
         if (interval > MAX_LENGTH || interval < 0) {interval = 0;}
 
-        //System.out.println("Name: " + name);
-        System.out.println("Mode: " + mode);
-        System.out.println("Size: " + size);
-        System.out.println("Direction: " + planeDirection);
-        System.out.println("length: " + length);
-        System.out.println("Reversed: " + reversed);
-        System.out.println("Interval: " + interval);
+        // Offset for active blocks.
+//        if (depth > 1) {
+//            // Add any interval
+//            depth += interval;
+//        }
 
         BlockPos playerPos = CLIENT.player.blockPosition();
         ClientLevel level = CLIENT.level;
@@ -186,37 +183,44 @@ public class MCADClient implements ClientModInitializer {
 
         Direction originFacing = level.getBlockState(origin).getValue(BlockStateProperties.HORIZONTAL_FACING);
 
+        //System.out.println("Name: " + name);
+        System.out.println("Origin Found: " + origin + " (facing) -> " + originFacing);
+        System.out.println("Mode: " + mode);
+        System.out.println("Size: " + size);
+        System.out.println("Direction: " + planeDirection);
+        System.out.println("depth: " + depth);
+        System.out.println("length: " + length);
+        System.out.println("Reversed: " + reversed);
+        System.out.println("Interval: " + interval);
+
+        Map<BlockPos, BlockState> blocks;
+
         if (mode == Mode.FASTCUT) {
             // Find all blocks next to origin block
-            Map<BlockPos, BlockState> allBlocks = new Sketch().getAllBlocks(level, origin, size, planeDirection);
-
-            for (Map.Entry<BlockPos, BlockState> block : allBlocks.entrySet()) {
-                Map<BlockPos, BlockState> blockLine = getNextBlocks(level, origin, originFacing, mode, planeDirection, length, reversed, interval, block);
-
-                ClientPlayNetworking.send(
-                        UpdateBlocks.update(blockLine, Blocks.AIR.defaultBlockState())
-                );
-            }
-            return;
+            blocks = new Sketch().getAllBlocks(level, origin, size, planeDirection);
+        } else {
+            // Find active blocks next to origin block
+            blocks = new Sketch().findActiveBlocks(level, origin, size, depth, planeDirection);
         }
 
-        // Find active blocks next to origin block
-        Map<BlockPos, BlockState> activeBlocks = new Sketch().findActiveBlocks(level, origin, size, planeDirection);
-
         // For each active block
-        for (Map.Entry<BlockPos, BlockState> block : activeBlocks.entrySet()) {
+        for (Map.Entry<BlockPos, BlockState> block : blocks.entrySet()) {
             // Map of the blocks along the full length of one active block at a time
-            Map<BlockPos, BlockState> blockLine = getNextBlocks(level, origin, originFacing, mode, planeDirection, length, reversed, interval, block);
+            Map<BlockPos, BlockState> blockLine = getNextBlocks(level, origin, originFacing, mode, planeDirection, depth, length, reversed, interval, block);
 
-            if (mode == Mode.EXTRUDE || mode == Mode.JOIN) {
-                ClientPlayNetworking.send(
-                        UpdateBlocks.update(blockLine)
-                );
-            } else if (mode == Mode.CUT || mode == Mode.MATCHCUT) {
-                ClientPlayNetworking.send(
-                        UpdateBlocks.update(blockLine, Blocks.AIR.defaultBlockState())
-                );
-            }
+            sendBlocks(blockLine, mode);
+        }
+    }
+
+    private static void sendBlocks(Map<BlockPos, BlockState> blocks, Mode mode) {
+        if (mode == Mode.EXTRUDE || mode == Mode.JOIN) {
+            ClientPlayNetworking.send(
+                    UpdateBlocks.update(blocks)
+            );
+        } else if (mode == Mode.CUT || mode == Mode.FASTCUT || mode == Mode.MATCHCUT) {
+            ClientPlayNetworking.send(
+                    UpdateBlocks.update(blocks, Blocks.AIR.defaultBlockState())
+            );
         }
     }
 
@@ -253,6 +257,7 @@ public class MCADClient implements ClientModInitializer {
                                                                     Direction originFacing,
                                                                     Mode mode,
                                                                     PlaneDirection planeDirection,
+                                                                    int depth,
                                                                     int length,
                                                                     boolean reversed,
                                                                     int interval,
@@ -270,12 +275,10 @@ public class MCADClient implements ClientModInitializer {
 
         int step = reversed ? -1 : 1;
 
-        // counting up to next interval
-        // Start at -1 so active block not counted
-        int skipCount = -1;
+        int mod = depth + interval;
 
         for (int i = 0; i < length; i++) {
-            int offset = i * step;
+            int offset = i * mod * step;
 
             BlockState currState = level.getBlockState(pos);
 
@@ -284,28 +287,18 @@ public class MCADClient implements ClientModInitializer {
                 case A -> nextPos = Sketch.localOffset(pos, originFacing, 0, 0, offset);
                 case B -> nextPos = Sketch.localOffset(pos, originFacing, -offset, 0, 0);
                 case C -> nextPos = Sketch.localOffset(pos, originFacing, 0, offset, 0);
-
             };
 
-            // Not counting the active block, If next block is not air and mode is join, end line and return it.
+            // JOIN : Not counting the active block, If next block is not air and mode is join, end line and return it.
             if (i > 0 && !level.getBlockState(nextPos).isAir() && mode == Mode.JOIN) {return blockLine;}
 
-            // If current block is not same type as next block skip it
+            // MATCHCUT : If current block is not same type as next block skip it
             if (level.getBlockState(nextPos) != currState && mode == Mode.MATCHCUT) {continue;}
 
-            // Place next block each time interval is reached
-            if (interval == 0) {
-                blockLine.put(nextPos, state);
-            } else if (skipCount == interval) {
-                blockLine.put(nextPos, state);
-                skipCount = 0;
-            } else {
-                skipCount++;
-            }
+            blockLine.put(nextPos, state);
 
         }
         return blockLine;
     }
-
 
 }

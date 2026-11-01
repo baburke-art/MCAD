@@ -49,6 +49,10 @@ public class MCADEditor extends Screen {
     private PlaneDirection selectedPlaneDirection = PlaneDirection.A;
     private boolean directionDropdownOpen = false;
 
+    // Depth input
+    private EditBox depthInput;
+    private String depthValue = "0";
+
     // Length input
     private EditBox lengthInput;
     private String lengthValue = "0";
@@ -246,6 +250,22 @@ public class MCADEditor extends Screen {
             }
         }
 
+        //Depth Label
+        form.addChild(addLabel("Depth:"));
+        // Length input
+        depthInput = new EditBox(
+                font, 0, 0,
+                contentWidth, 20,
+                Component.literal("Depth:")
+        );
+        depthInput.setValue(depthValue);
+        depthInput.setHint(Component.literal("0"));
+        // For implementing real time plane guide
+        // When length input changes
+        depthInput.setResponder(value ->
+                depthValue = value.isEmpty() ? "0" : value);
+        form.addChild(depthInput);
+
         // Length label
         form.addChild(addLabel("Length:"));
         // Length input
@@ -346,6 +366,7 @@ public class MCADEditor extends Screen {
                 selectedMode,
                 sizeValue,
                 selectedPlaneDirection,
+                depthValue,
                 lengthValue,
                 reversed,
                 intervalValue

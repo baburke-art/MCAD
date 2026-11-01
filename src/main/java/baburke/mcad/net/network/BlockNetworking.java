@@ -72,7 +72,8 @@ public final class BlockNetworking {
                         for (var entry : blocks.entrySet()) {
                             BlockPos pos = entry.getKey();
                             BlockState state = entry.getValue();
-                            BlockEntity blockEntity = level.getBlockEntity(pos);
+
+                            //System.out.println(pos + " " + state);
 
                             // Don't modify unloaded positions.
                             if (!level.isLoaded(pos)) {
@@ -86,7 +87,7 @@ public final class BlockNetworking {
                             //System.out.println(pos  + " , " + state);
 
                             // if placing play sound
-                            if (state != Blocks.AIR.defaultBlockState()) {
+                            if (!state.equals(Blocks.AIR.defaultBlockState())) {
                                 SoundType soundType = state.getSoundType();
                                 SoundEvent sound = soundType.getPlaceSound();
                                 level.playSound(null, pos, sound, SoundSource.BLOCKS);

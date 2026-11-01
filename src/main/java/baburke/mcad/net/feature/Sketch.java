@@ -1,5 +1,7 @@
 package baburke.mcad.net.feature;
 
+import baburke.mcad.net.network.UpdateBlocks;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Direction;
@@ -48,6 +50,7 @@ public class Sketch {
             ClientLevel level,
             BlockPos origin,
             int size,
+            int depth,
             PlaneDirection planeDirection
     ) {
 
@@ -59,9 +62,9 @@ public class Sketch {
         BlockPos startBlock = localOffset(origin, originFace, -1, 0, 1);
 
         BlockPos endBlock = switch (planeDirection) {
-            case A -> localOffset(origin, originFace, -size, size - 1, 1);
-            case B -> localOffset(origin, originFace, -1, size - 1, size);
-            case C -> localOffset(origin, originFace, -size, 0, size);
+            case A -> localOffset(origin, originFace, -size, size - 1, depth);
+            case B -> localOffset(origin, originFace, -depth, size - 1, size);
+            case C -> localOffset(origin, originFace, -size, depth - 1, size);
         };
 
         // Neg z = North
@@ -93,7 +96,7 @@ public class Sketch {
 //
 //            for (int i = 0; i < size; i++) {
 //                ClientPlayNetworking.send(
-//                        UpdateBlocks.place(pos.immutable(), plane_Colour)
+//                        UpdateBlocks.update(pos.immutable(), plane_Colour)
 //                );
 //            }
         }
