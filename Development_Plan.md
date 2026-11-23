@@ -23,7 +23,7 @@ Maybe?
     - Add undo and redo
     - Rotate (0-360) extrude and cut around axis
     - Mirror extrude
-    - Settings menu (size, length
+    - Settings menu (size, length, guide plane on/off)
 
 4.0
 

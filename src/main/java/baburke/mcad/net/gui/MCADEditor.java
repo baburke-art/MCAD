@@ -267,12 +267,12 @@ public class MCADEditor extends Screen {
         form.addChild(depthInput);
 
         // Length label
-        form.addChild(addLabel("Length:"));
+        form.addChild(addLabel("Amount:"));
         // Length input
         lengthInput = new EditBox(
                 font, 0, 0,
                 contentWidth, 20,
-                Component.literal("Length:")
+                Component.literal("Amount:")
         );
         lengthInput.setValue(lengthValue);
         lengthInput.setHint(Component.literal("0"));

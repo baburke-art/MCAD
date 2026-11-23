@@ -86,16 +86,17 @@ public final class BlockNetworking {
 
                             //System.out.println(pos  + " , " + state);
 
-                            // if placing play sound
+                            // if not air at position, play destroy sound of the block
+                            if (!level.getBlockState(pos).isAir()) {
+                                BlockState currBlock = level.getBlockState(pos);
+                                SoundEvent sound = currBlock.getSoundType().getBreakSound();
+                                level.playSound(null, pos, sound, SoundSource.BLOCKS);
+                            }
+
+                            // if placing a block play sound
                             if (!state.equals(Blocks.AIR.defaultBlockState())) {
                                 SoundType soundType = state.getSoundType();
                                 SoundEvent sound = soundType.getPlaceSound();
-                                level.playSound(null, pos, sound, SoundSource.BLOCKS);
-                            } else {
-                                // if destroying play break sound of current block
-                                BlockState currBlock = level.getBlockState(pos);
-
-                                SoundEvent sound = currBlock.getSoundType().getBreakSound();
                                 level.playSound(null, pos, sound, SoundSource.BLOCKS);
                             }
 
