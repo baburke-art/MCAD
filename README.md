@@ -2,8 +2,6 @@
 
 ## Setup
 
-For setup instructions, please see the [Fabric Documentation page](https://docs.fabricmc.net/develop/getting-started/creating-a-project#setting-up) related to the IDE that you are using.
+Download latest release along with current Fabric API (fabric-api-0.162.0+26.3.jar) available at https://www.curseforge.com/minecraft/mc-mods/fabric-api/files/9557683
 
-## License
-
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+Brief guide of MCAD available at baburke.com/mcad
